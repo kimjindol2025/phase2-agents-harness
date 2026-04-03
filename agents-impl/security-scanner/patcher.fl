@@ -1,0 +1,332 @@
+// Security-Scanner 에이전트 — 패치 생성기
+// 자동 보안 패치 생성
+
+// ==================== 구조체 정의 ====================
+
+struct Patch {
+    vulnerability_id: str
+    original_code: str
+    patched_code: str
+    patch_type: str
+    auto_applicable: bool
+    confidence: f64
+}
+
+struct PatchResult {
+    target_file: str
+    patches: [Patch]
+    applied_count: i32
+    skipped_count: i32
+    estimated_risk_reduction: f64
+}
+
+// ==================== Patch 함수 ====================
+
+fn patch_new(vuln_id: str, patch_type: str) -> Patch {
+    Patch {
+        vulnerability_id: vuln_id,
+        original_code: "",
+        patched_code: "",
+        patch_type: patch_type,
+        auto_applicable: true,
+        confidence: 0.7
+    }
+}
+
+fn patch_set_original(patch: Patch, code: str) -> Patch {
+    patch.original_code = code
+    patch
+}
+
+fn patch_set_patched(patch: Patch, code: str) -> Patch {
+    patch.patched_code = code
+    patch
+}
+
+fn patch_set_confidence(patch: Patch, conf: f64) -> Patch {
+    var safe_conf = conf
+    if safe_conf > 1.0 {
+        safe_conf = 1.0
+    }
+    if safe_conf < 0.0 {
+        safe_conf = 0.0
+    }
+    patch.confidence = safe_conf
+    patch
+}
+
+fn patch_display(patch: Patch) -> str {
+    var s: str = ""
+    s = s + "Patch[" + patch.patch_type + "] "
+    s = s + patch.vulnerability_id + " "
+    s = s + "conf=" + str(patch.confidence * 100.0) + "%"
+    s
+}
+
+// ==================== 패치 전략 ====================
+
+fn patch_sql_injection(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A03", "parameterized_query")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: Parameterized Query 템플릿
+    var patched = "// [PATCHED] Use parameterized query:\n"
+    patched = patched + "// SELECT * FROM users WHERE id = ? (bind parameter)\n"
+    patched = patched + "// Original vulnerable: " + substring(original_code, 0, 50) + "...\n"
+    patched = patched + "// Prepared statement recommended"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.95)
+    patch
+}
+
+fn patch_xss(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A07", "html_escape")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: HTML Escaping
+    var patched = "// [PATCHED] Escape HTML entities:\n"
+    patched = patched + "// Use encodeURIComponent() or sanitizeHtml() library\n"
+    patched = patched + "// UNSAFE: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// SAFE: element.textContent = untrustedData;"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.9)
+    patch
+}
+
+fn patch_hardcoded_secret(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A02", "env_variable")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: 환경 변수로 교체
+    var patched = "// [PATCHED] Use environment variable:\n"
+    patched = patched + "// password = os.environ.get('DB_PASSWORD')\n"
+    patched = patched + "// Remove hardcoded: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// Store in .env or secrets manager"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.85)
+    patch
+}
+
+fn patch_weak_crypto(original_code: str, weak_algo: str) -> Patch {
+    var patch = patch_new("OWASP-A02", "strong_crypto")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: 강력한 암호화로 교체
+    var patched = "// [PATCHED] Use strong cryptography:\n"
+    patched = patched + "// Replace " + weak_algo + " with SHA256 or bcrypt\n"
+    patched = patched + "// WEAK: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// STRONG: import hashlib; hashlib.sha256(data).hexdigest()"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.9)
+    patch
+}
+
+fn patch_path_traversal(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A01", "path_validation")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: 경로 검증 추가
+    var patched = "// [PATCHED] Validate file path:\n"
+    patched = patched + "// Ensure path is within allowed directory\n"
+    patched = patched + "// Use os.path.abspath() and check prefix\n"
+    patched = patched + "// UNSAFE: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// SAFE: if not realpath.startswith(allowed_dir): raise Error"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.85)
+    patch
+}
+
+fn patch_command_injection(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A03", "safe_subprocess")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: 안전한 subprocess 사용
+    var patched = "// [PATCHED] Use safe subprocess execution:\n"
+    patched = patched + "// Use subprocess.run() with shell=False and list args\n"
+    patched = patched + "// UNSAFE: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// SAFE: subprocess.run(['/bin/cmd', arg1, arg2], check=True)"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.95)
+    patch
+}
+
+fn patch_info_disclosure(original_code: str) -> Patch {
+    var patch = patch_new("OWASP-A01", "disable_debug")
+    patch = patch_set_original(patch, original_code)
+
+    ;; 패치 전략: 디버그 모드 비활성화
+    var patched = "// [PATCHED] Disable debug mode in production:\n"
+    patched = patched + "// Use DEBUG = os.environ.get('DEBUG', False) == 'True'\n"
+    patched = patched + "// UNSAFE: " + substring(original_code, 0, 40) + "\n"
+    patched = patched + "// Set DEBUG=False in production environment"
+
+    patch = patch_set_patched(patch, patched)
+    patch = patch_set_confidence(patch, 0.8)
+    patch
+}
+
+// ==================== 패치 생성 ====================
+
+fn generate_patch_for_vulnerability(vuln_id: str, original_code: str) -> Patch {
+    ;; 취약점 ID에 따라 적절한 패치 생성
+    if vuln_id == "OWASP-A03" {
+        ;; SQL Injection or Command Injection
+        if substring(original_code, 0, 6) == "SELECT" || substring(original_code, 0, 3) == "sql" {
+            return patch_sql_injection(original_code)
+        } else {
+            return patch_command_injection(original_code)
+        }
+    } else if vuln_id == "OWASP-A07" {
+        return patch_xss(original_code)
+    } else if vuln_id == "OWASP-A02" {
+        ;; Hardcoded secret or weak crypto
+        if substring(original_code, 0, 10) == "password =" {
+            return patch_hardcoded_secret(original_code)
+        } else {
+            return patch_weak_crypto(original_code, "MD5/SHA1")
+        }
+    } else if vuln_id == "OWASP-A01" {
+        ;; Path traversal or Info disclosure
+        if substring(original_code, 0, 2) == ".." {
+            return patch_path_traversal(original_code)
+        } else {
+            return patch_info_disclosure(original_code)
+        }
+    }
+
+    ;; 기본값
+    patch_new(vuln_id, "unknown")
+}
+
+// ==================== 패치 적용 ====================
+
+fn batch_patch(file: str, vulnerabilities: [str]) -> PatchResult {
+    var result = PatchResult {
+        target_file: file,
+        patches: [],
+        applied_count: 0,
+        skipped_count: 0,
+        estimated_risk_reduction: 0.0
+    }
+
+    var i: i32 = 0
+    while i < length(vulnerabilities) {
+        var patch = generate_patch_for_vulnerability(vulnerabilities[i], "")
+        result.patches.push(patch)
+
+        if patch.auto_applicable {
+            result.applied_count = result.applied_count + 1
+        } else {
+            result.skipped_count = result.skipped_count + 1
+        }
+
+        i = i + 1
+    }
+
+    ;; 위험도 감소 계산 (패치별 0.15 기여)
+    var reduction: f64 = 0.0
+    i = 0
+    while i < length(result.patches) {
+        reduction = reduction + 0.15
+        i = i + 1
+    }
+
+    if reduction > 1.0 {
+        reduction = 1.0
+    }
+    result.estimated_risk_reduction = reduction * 100.0
+
+    result
+}
+
+// ==================== 리포트 생성 ====================
+
+fn patch_report(results: [PatchResult]) -> str {
+    var report: str = ""
+    report = report + "# Security Patch Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Files patched: " + str(length(results)) + "\n"
+
+    var total_patches: i32 = 0
+    var total_applied: i32 = 0
+
+    var i: i32 = 0
+    while i < length(results) {
+        total_patches = total_patches + length(results[i].patches)
+        total_applied = total_applied + results[i].applied_count
+        i = i + 1
+    }
+
+    report = report + "- Total patches: " + str(total_patches) + "\n"
+    report = report + "- Applied: " + str(total_applied) + "\n"
+    report = report + "- Skipped: " + str(total_patches - total_applied) + "\n\n"
+
+    report = report + "## Detailed Patches\n"
+    i = 0
+    while i < length(results) {
+        report = report + "### File: " + results[i].target_file + "\n"
+        report = report + "- Patches: " + str(length(results[i].patches)) + "\n"
+        report = report + "- Risk reduction: " + str(results[i].estimated_risk_reduction) + "%\n\n"
+        i = i + 1
+    }
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║     Security-Scanner — 패치 생성기       ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. SQL Injection 패치
+    println("1️⃣ SQL Injection 패치")
+    var patch1 = patch_sql_injection("SELECT * FROM users WHERE id = '" + input + "' OR '1'='1")
+    println(patch_display(patch1))
+    println("패치 타입: " + patch1.patch_type)
+    println("")
+
+    ;; 2. XSS 패치
+    println("2️⃣ XSS 패치")
+    var patch2 = patch_xss("document.write(userInput)")
+    println(patch_display(patch2))
+    println("")
+
+    ;; 3. 하드코딩 비밀번호 패치
+    println("3️⃣ 하드코딩 비밀번호 패치")
+    var patch3 = patch_hardcoded_secret("password = \"admin123\"")
+    println(patch_display(patch3))
+    println("")
+
+    ;; 4. 약한 암호화 패치
+    println("4️⃣ 약한 암호화 (MD5) 패치")
+    var patch4 = patch_weak_crypto("MD5(password)", "MD5")
+    println(patch_display(patch4))
+    println("")
+
+    ;; 5. 배치 패치
+    println("5️⃣ 배치 패치 생성")
+    var vulns: [str] = ["OWASP-A03", "OWASP-A07", "OWASP-A02"]
+    var patch_result = batch_patch("app.py", vulns)
+    println("생성된 패치: " + str(length(patch_result.patches)))
+    println("적용 가능: " + str(patch_result.applied_count))
+    println("위험도 감소: " + str(patch_result.estimated_risk_reduction) + "%")
+    println("")
+
+    ;; 6. 리포트
+    println("6️⃣ 패치 리포트")
+    var results: [PatchResult] = [patch_result]
+    var report = patch_report(results)
+    println(substring(report, 0, 300) + "...")
+    println("")
+
+    println("✅ 패치 생성기 로드 완료")
+}

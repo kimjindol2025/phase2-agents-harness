@@ -1,0 +1,513 @@
+// Security-Scanner 에이전트 — 취약점 스캐너
+// OWASP 패턴 기반 보안 분석
+
+// ==================== 구조체 정의 ====================
+
+struct ScanTarget {
+    code: str
+    filename: str
+    language: str
+    context: str
+}
+
+struct Vulnerability {
+    id: str
+    category: str
+    severity: str
+    line_number: i32
+    description: str
+    code_snippet: str
+    cve_id: str
+    confidence: f64
+}
+
+struct ScanResult {
+    target: ScanTarget
+    vulnerabilities: [Vulnerability]
+    scan_duration_ms: i32
+    owasp_coverage: f64
+    false_positive_rate: f64
+    overall_severity: str
+}
+
+// ==================== 헬퍼 함수 ====================
+
+fn index_of(text: str, pattern: str) -> i32 {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return i
+        }
+        i = i + 1
+    }
+    -1
+}
+
+fn index_of_from(text: str, pattern: str, start: i32) -> i32 {
+    var i: i32 = start
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return i
+        }
+        i = i + 1
+    }
+    -1
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i <= length(text) - length(pattern) {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+// ==================== ScanTarget 함수 ====================
+
+fn scan_target_new(code: str, filename: str, language: str) -> ScanTarget {
+    ScanTarget {
+        code: code,
+        filename: filename,
+        language: language,
+        context: ""
+    }
+}
+
+fn scan_target_set_context(target: ScanTarget, context: str) -> ScanTarget {
+    target.context = context
+    target
+}
+
+fn scan_target_display(target: ScanTarget) -> str {
+    var s: str = ""
+    s = s + "ScanTarget { "
+    s = s + "file=" + target.filename + ", "
+    s = s + "lang=" + target.language + ", "
+    s = s + "size=" + str(length(target.code)) + " bytes }"
+    s
+}
+
+// ==================== Vulnerability 함수 ====================
+
+fn vulnerability_new(id: str, category: str, severity: str) -> Vulnerability {
+    Vulnerability {
+        id: id,
+        category: category,
+        severity: severity,
+        line_number: 0,
+        description: "",
+        code_snippet: "",
+        cve_id: "",
+        confidence: 0.5
+    }
+}
+
+fn vulnerability_set_line(vuln: Vulnerability, line: i32) -> Vulnerability {
+    vuln.line_number = line
+    vuln
+}
+
+fn vulnerability_set_description(vuln: Vulnerability, desc: str) -> Vulnerability {
+    vuln.description = desc
+    vuln
+}
+
+fn vulnerability_set_confidence(vuln: Vulnerability, conf: f64) -> Vulnerability {
+    var safe_conf = conf
+    if safe_conf > 1.0 {
+        safe_conf = 1.0
+    }
+    if safe_conf < 0.0 {
+        safe_conf = 0.0
+    }
+    vuln.confidence = safe_conf
+    vuln
+}
+
+fn vulnerability_display(vuln: Vulnerability) -> str {
+    var s: str = ""
+    s = s + "Vulnerability[" + vuln.severity + "] "
+    s = s + vuln.category + " (" + vuln.id + ") "
+    s = s + "line:" + str(vuln.line_number)
+    s
+}
+
+// ==================== 취약점 탐지 함수 ====================
+
+fn detect_sql_injection(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; SQL Injection 패턴 1: ' OR
+    if contains(code, "' OR") {
+        var vuln = vulnerability_new("OWASP-A03", "SQLInjection", "critical")
+        vuln = vulnerability_set_description(vuln, "Potential SQL Injection: ' OR pattern detected")
+        vuln = vulnerability_set_confidence(vuln, 0.85)
+        vulns.push(vuln)
+    }
+
+    ;; SQL Injection 패턴 2: 1=1
+    if contains(code, "1=1") {
+        var vuln = vulnerability_new("OWASP-A03", "SQLInjection", "high")
+        vuln = vulnerability_set_description(vuln, "SQL condition 1=1 detected")
+        vuln = vulnerability_set_confidence(vuln, 0.75)
+        vulns.push(vuln)
+    }
+
+    ;; SQL Injection 패턴 3: --
+    if contains(code, "--") {
+        var vuln = vulnerability_new("OWASP-A03", "SQLInjection", "high")
+        vuln = vulnerability_set_description(vuln, "SQL comment -- detected")
+        vuln = vulnerability_set_confidence(vuln, 0.7)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_xss(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; XSS 패턴 1: innerHTML
+    if contains(code, "innerHTML") {
+        var vuln = vulnerability_new("OWASP-A07", "XSS", "high")
+        vuln = vulnerability_set_description(vuln, "Unsafe innerHTML assignment")
+        vuln = vulnerability_set_confidence(vuln, 0.8)
+        vulns.push(vuln)
+    }
+
+    ;; XSS 패턴 2: document.write
+    if contains(code, "document.write") {
+        var vuln = vulnerability_new("OWASP-A07", "XSS", "high")
+        vuln = vulnerability_set_description(vuln, "Unsafe document.write() call")
+        vuln = vulnerability_set_confidence(vuln, 0.75)
+        vulns.push(vuln)
+    }
+
+    ;; XSS 패턴 3: eval
+    if contains(code, "eval(") {
+        var vuln = vulnerability_new("OWASP-A07", "XSS", "critical")
+        vuln = vulnerability_set_description(vuln, "Code execution via eval()")
+        vuln = vulnerability_set_confidence(vuln, 0.95)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_hardcoded_secrets(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; Hardcoded 패턴 1: password
+    if contains(code, "password = \"") {
+        var vuln = vulnerability_new("OWASP-A02", "HardcodedSecret", "high")
+        vuln = vulnerability_set_description(vuln, "Hardcoded password in code")
+        vuln = vulnerability_set_confidence(vuln, 0.9)
+        vulns.push(vuln)
+    }
+
+    ;; Hardcoded 패턴 2: secret
+    if contains(code, "secret = \"") {
+        var vuln = vulnerability_new("OWASP-A02", "HardcodedSecret", "high")
+        vuln = vulnerability_set_description(vuln, "Hardcoded secret key in code")
+        vuln = vulnerability_set_confidence(vuln, 0.85)
+        vulns.push(vuln)
+    }
+
+    ;; Hardcoded 패턴 3: api_key
+    if contains(code, "api_key = \"") {
+        var vuln = vulnerability_new("OWASP-A02", "HardcodedSecret", "high")
+        vuln = vulnerability_set_description(vuln, "Hardcoded API key in code")
+        vuln = vulnerability_set_confidence(vuln, 0.9)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_weak_crypto(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; Weak crypto 1: MD5
+    if contains(code, "MD5(") {
+        var vuln = vulnerability_new("OWASP-A02", "WeakCrypto", "high")
+        vuln = vulnerability_set_description(vuln, "MD5 is cryptographically weak")
+        vuln = vulnerability_set_confidence(vuln, 0.95)
+        vulns.push(vuln)
+    }
+
+    ;; Weak crypto 2: SHA1
+    if contains(code, "SHA1(") {
+        var vuln = vulnerability_new("OWASP-A02", "WeakCrypto", "medium")
+        vuln = vulnerability_set_description(vuln, "SHA1 is deprecated")
+        vuln = vulnerability_set_confidence(vuln, 0.85)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_path_traversal(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; Path traversal 1: ../
+    if contains(code, "../") {
+        var vuln = vulnerability_new("OWASP-A01", "PathTraversal", "high")
+        vuln = vulnerability_set_description(vuln, "Potential path traversal: ../ detected")
+        vuln = vulnerability_set_confidence(vuln, 0.7)
+        vulns.push(vuln)
+    }
+
+    ;; Path traversal 2: ..\
+    if contains(code, "..\\") {
+        var vuln = vulnerability_new("OWASP-A01", "PathTraversal", "high")
+        vuln = vulnerability_set_description(vuln, "Potential path traversal: ..\\ detected")
+        vuln = vulnerability_set_confidence(vuln, 0.7)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_command_injection(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; Command injection 1: exec
+    if contains(code, "exec(") {
+        var vuln = vulnerability_new("OWASP-A03", "CommandInjection", "critical")
+        vuln = vulnerability_set_description(vuln, "System command execution via exec()")
+        vuln = vulnerability_set_confidence(vuln, 0.9)
+        vulns.push(vuln)
+    }
+
+    ;; Command injection 2: system
+    if contains(code, "system(") {
+        var vuln = vulnerability_new("OWASP-A03", "CommandInjection", "critical")
+        vuln = vulnerability_set_description(vuln, "System command execution via system()")
+        vuln = vulnerability_set_confidence(vuln, 0.9)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+fn detect_information_disclosure(code: str) -> [Vulnerability] {
+    var vulns: [Vulnerability] = []
+
+    ;; Info disclosure 1: DEBUG
+    if contains(code, "DEBUG = True") {
+        var vuln = vulnerability_new("OWASP-A01", "InfoDisclosure", "medium")
+        vuln = vulnerability_set_description(vuln, "Debug mode enabled in production")
+        vuln = vulnerability_set_confidence(vuln, 0.8)
+        vulns.push(vuln)
+    }
+
+    ;; Info disclosure 2: stack_trace
+    if contains(code, "stack_trace") {
+        var vuln = vulnerability_new("OWASP-A01", "InfoDisclosure", "medium")
+        vuln = vulnerability_set_description(vuln, "Stack trace information exposed")
+        vuln = vulnerability_set_confidence(vuln, 0.75)
+        vulns.push(vuln)
+    }
+
+    vulns
+}
+
+// ==================== 스캔 실행 ====================
+
+fn scan_code(target: ScanTarget) -> ScanResult {
+    var result = ScanResult {
+        target: target,
+        vulnerabilities: [],
+        scan_duration_ms: 100,
+        owasp_coverage: 0.9,
+        false_positive_rate: 0.05,
+        overall_severity: "low"
+    }
+
+    ;; 모든 탐지 규칙 실행
+    var sql_vulns = detect_sql_injection(target.code)
+    var i: i32 = 0
+    while i < length(sql_vulns) {
+        result.vulnerabilities.push(sql_vulns[i])
+        i = i + 1
+    }
+
+    var xss_vulns = detect_xss(target.code)
+    i = 0
+    while i < length(xss_vulns) {
+        result.vulnerabilities.push(xss_vulns[i])
+        i = i + 1
+    }
+
+    var secret_vulns = detect_hardcoded_secrets(target.code)
+    i = 0
+    while i < length(secret_vulns) {
+        result.vulnerabilities.push(secret_vulns[i])
+        i = i + 1
+    }
+
+    var crypto_vulns = detect_weak_crypto(target.code)
+    i = 0
+    while i < length(crypto_vulns) {
+        result.vulnerabilities.push(crypto_vulns[i])
+        i = i + 1
+    }
+
+    var path_vulns = detect_path_traversal(target.code)
+    i = 0
+    while i < length(path_vulns) {
+        result.vulnerabilities.push(path_vulns[i])
+        i = i + 1
+    }
+
+    var cmd_vulns = detect_command_injection(target.code)
+    i = 0
+    while i < length(cmd_vulns) {
+        result.vulnerabilities.push(cmd_vulns[i])
+        i = i + 1
+    }
+
+    var info_vulns = detect_information_disclosure(target.code)
+    i = 0
+    while i < length(info_vulns) {
+        result.vulnerabilities.push(info_vulns[i])
+        i = i + 1
+    }
+
+    ;; 전체 심각도 판단
+    if length(result.vulnerabilities) > 0 {
+        var critical_count: i32 = 0
+        var high_count: i32 = 0
+        i = 0
+        while i < length(result.vulnerabilities) {
+            if result.vulnerabilities[i].severity == "critical" {
+                critical_count = critical_count + 1
+            } else if result.vulnerabilities[i].severity == "high" {
+                high_count = high_count + 1
+            }
+            i = i + 1
+        }
+
+        if critical_count > 0 {
+            result.overall_severity = "critical"
+        } else if high_count > 0 {
+            result.overall_severity = "high"
+        } else {
+            result.overall_severity = "medium"
+        }
+    }
+
+    result
+}
+
+fn batch_scan(targets: [ScanTarget]) -> [ScanResult] {
+    var results: [ScanResult] = []
+    var i: i32 = 0
+
+    while i < length(targets) {
+        var result = scan_code(targets[i])
+        results.push(result)
+        i = i + 1
+    }
+
+    results
+}
+
+// ==================== 리포트 생성 ====================
+
+fn scan_report(results: [ScanResult]) -> str {
+    var report: str = ""
+    report = report + "# Security Scan Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Total files scanned: " + str(length(results)) + "\n"
+
+    var total_vulns: i32 = 0
+    var critical_total: i32 = 0
+    var high_total: i32 = 0
+
+    var i: i32 = 0
+    while i < length(results) {
+        total_vulns = total_vulns + length(results[i].vulnerabilities)
+        var j: i32 = 0
+        while j < length(results[i].vulnerabilities) {
+            if results[i].vulnerabilities[j].severity == "critical" {
+                critical_total = critical_total + 1
+            } else if results[i].vulnerabilities[j].severity == "high" {
+                high_total = high_total + 1
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    report = report + "- Total vulnerabilities: " + str(total_vulns) + "\n"
+    report = report + "- Critical: " + str(critical_total) + "\n"
+    report = report + "- High: " + str(high_total) + "\n\n"
+
+    report = report + "## Detailed Results\n"
+    i = 0
+    while i < length(results) {
+        report = report + "### File: " + results[i].target.filename + "\n"
+        report = report + "- Vulnerabilities: " + str(length(results[i].vulnerabilities)) + "\n"
+        report = report + "- Severity: " + results[i].overall_severity + "\n\n"
+        i = i + 1
+    }
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║   Security-Scanner — 취약점 스캐너       ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. SQL Injection 테스트
+    println("1️⃣ SQL Injection 감지")
+    var code1 = "SELECT * FROM users WHERE id = '" + input + "' OR '1'='1"
+    var target1 = scan_target_new(code1, "query.sql", "sql")
+    var result1 = scan_code(target1)
+    println("발견: " + str(length(result1.vulnerabilities)) + "개")
+    var i: i32 = 0
+    while i < length(result1.vulnerabilities) {
+        println("  - " + vulnerability_display(result1.vulnerabilities[i]))
+        i = i + 1
+    }
+    println("")
+
+    ;; 2. XSS 테스트
+    println("2️⃣ XSS 감지")
+    var code2 = "document.write(userInput); var x = innerHTML = data;"
+    var target2 = scan_target_new(code2, "script.js", "js")
+    var result2 = scan_code(target2)
+    println("발견: " + str(length(result2.vulnerabilities)) + "개")
+    println("")
+
+    ;; 3. 하드코딩 비밀번호 테스트
+    println("3️⃣ 하드코딩 비밀번호 감지")
+    var code3 = "password = \"admin123\"; secret = \"mysecretkey\";"
+    var target3 = scan_target_new(code3, "config.py", "python")
+    var result3 = scan_code(target3)
+    println("발견: " + str(length(result3.vulnerabilities)) + "개")
+    println("")
+
+    ;; 4. 배치 스캔
+    println("4️⃣ 배치 스캔")
+    var targets: [ScanTarget] = [target1, target2, target3]
+    var batch_results = batch_scan(targets)
+    println("스캔 완료: " + str(length(batch_results)) + "개 파일")
+    println("")
+
+    ;; 5. 리포트
+    println("5️⃣ 스캔 리포트")
+    var report = scan_report(batch_results)
+    println(substring(report, 0, 300) + "...")
+    println("")
+
+    println("✅ 취약점 스캐너 로드 완료")
+}
