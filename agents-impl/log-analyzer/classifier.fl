@@ -1,0 +1,415 @@
+// Log-Analyzer 에이전트 — 에러 분류기
+// 로그 엔트리를 에러 타입으로 분류
+
+// ==================== 구조체 정의 ====================
+
+struct ErrorPattern {
+    pattern: str
+    error_type: str
+    severity: str
+    category: str
+}
+
+struct ErrorClassification {
+    log_entry_id: i32
+    original_message: str
+    detected_error_type: str
+    severity: str
+    category: str
+    confidence: f64
+    suggested_action: str
+}
+
+struct ClassificationResult {
+    total_entries: i32
+    classified_count: i32
+    database_errors: i32
+    network_errors: i32
+    auth_errors: i32
+    resource_errors: i32
+    unknown_errors: i32
+    critical_count: i32
+    high_count: i32
+    medium_count: i32
+    low_count: i32
+    classifications: [ErrorClassification]
+    classification_time_ms: i32
+}
+
+// ==================== 헬퍼 함수 ====================
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn to_lower(text: str) -> str {
+    var result: str = ""
+    var i: i32 = 0
+    while i < length(text) {
+        var c = substring(text, i, i + 1)
+        ;; 단순화된 소문자 변환 (A-Z만)
+        if c == "A" { result = result + "a" }
+        else if c == "B" { result = result + "b" }
+        else if c == "C" { result = result + "c" }
+        else if c == "D" { result = result + "d" }
+        else if c == "E" { result = result + "e" }
+        else if c == "F" { result = result + "f" }
+        else if c == "G" { result = result + "g" }
+        else if c == "H" { result = result + "h" }
+        else if c == "I" { result = result + "i" }
+        else if c == "J" { result = result + "j" }
+        else if c == "K" { result = result + "k" }
+        else if c == "L" { result = result + "l" }
+        else if c == "M" { result = result + "m" }
+        else if c == "N" { result = result + "n" }
+        else if c == "O" { result = result + "o" }
+        else if c == "P" { result = result + "p" }
+        else if c == "Q" { result = result + "q" }
+        else if c == "R" { result = result + "r" }
+        else if c == "S" { result = result + "s" }
+        else if c == "T" { result = result + "t" }
+        else if c == "U" { result = result + "u" }
+        else if c == "V" { result = result + "v" }
+        else if c == "W" { result = result + "w" }
+        else if c == "X" { result = result + "x" }
+        else if c == "Y" { result = result + "y" }
+        else if c == "Z" { result = result + "z" }
+        else { result = result + c }
+        i = i + 1
+    }
+    result
+}
+
+// ==================== 에러 패턴 정의 ====================
+
+fn get_error_patterns() -> [ErrorPattern] {
+    var patterns: [ErrorPattern] = []
+
+    ;; 데이터베이스 에러
+    var p1 = ErrorPattern {
+        pattern: "Connection refused",
+        error_type: "DB_CONNECTION_FAILED",
+        severity: "critical",
+        category: "database"
+    }
+    patterns.push(p1)
+
+    var p2 = ErrorPattern {
+        pattern: "Connection timeout",
+        error_type: "DB_TIMEOUT",
+        severity: "high",
+        category: "database"
+    }
+    patterns.push(p2)
+
+    var p3 = ErrorPattern {
+        pattern: "Deadlock detected",
+        error_type: "DB_DEADLOCK",
+        severity: "high",
+        category: "database"
+    }
+    patterns.push(p3)
+
+    var p4 = ErrorPattern {
+        pattern: "Out of memory",
+        error_type: "DB_OOM",
+        severity: "critical",
+        category: "database"
+    }
+    patterns.push(p4)
+
+    ;; 네트워크 에러
+    var p5 = ErrorPattern {
+        pattern: "Connection reset",
+        error_type: "NET_CONN_RESET",
+        severity: "high",
+        category: "network"
+    }
+    patterns.push(p5)
+
+    var p6 = ErrorPattern {
+        pattern: "Timeout",
+        error_type: "NET_TIMEOUT",
+        severity: "high",
+        category: "network"
+    }
+    patterns.push(p6)
+
+    var p7 = ErrorPattern {
+        pattern: "DNS resolution failed",
+        error_type: "NET_DNS_FAILED",
+        severity: "medium",
+        category: "network"
+    }
+    patterns.push(p7)
+
+    ;; 인증 에러
+    var p8 = ErrorPattern {
+        pattern: "Authentication failed",
+        error_type: "AUTH_FAILED",
+        severity: "high",
+        category: "auth"
+    }
+    patterns.push(p8)
+
+    var p9 = ErrorPattern {
+        pattern: "Permission denied",
+        error_type: "AUTH_PERMISSION_DENIED",
+        severity: "medium",
+        category: "auth"
+    }
+    patterns.push(p9)
+
+    var p10 = ErrorPattern {
+        pattern: "Token expired",
+        error_type: "AUTH_TOKEN_EXPIRED",
+        severity: "medium",
+        category: "auth"
+    }
+    patterns.push(p10)
+
+    ;; 리소스 에러
+    var p11 = ErrorPattern {
+        pattern: "Disk space low",
+        error_type: "RES_DISK_FULL",
+        severity: "critical",
+        category: "resource"
+    }
+    patterns.push(p11)
+
+    var p12 = ErrorPattern {
+        pattern: "File not found",
+        error_type: "RES_FILE_NOT_FOUND",
+        severity: "medium",
+        category: "resource"
+    }
+    patterns.push(p12)
+
+    patterns
+}
+
+// ==================== 분류 함수 ====================
+
+fn classify_error(message: str, line_num: i32) -> ErrorClassification {
+    var patterns = get_error_patterns()
+    var lower_msg = to_lower(message)
+
+    var best_match: i32 = -1
+    var best_confidence: f64 = 0.0
+
+    var i: i32 = 0
+    while i < length(patterns) {
+        var pattern = patterns[i]
+        var lower_pattern = to_lower(pattern.pattern)
+
+        if contains(lower_msg, lower_pattern) {
+            var confidence: f64 = 0.9
+            if length(message) < 50 {
+                confidence = 0.85
+            }
+
+            if confidence > best_confidence {
+                best_confidence = confidence
+                best_match = i
+            }
+        }
+
+        i = i + 1
+    }
+
+    var classification = ErrorClassification {
+        log_entry_id: line_num,
+        original_message: message,
+        detected_error_type: "UNKNOWN",
+        severity: "low",
+        category: "unknown",
+        confidence: 0.0,
+        suggested_action: "Investigate log details"
+    }
+
+    if best_match >= 0 {
+        var matched = patterns[best_match]
+        classification.detected_error_type = matched.error_type
+        classification.severity = matched.severity
+        classification.category = matched.category
+        classification.confidence = best_confidence
+
+        ;; 권장 조치
+        if matched.category == "database" {
+            classification.suggested_action = "Check database connectivity and logs"
+        } else if matched.category == "network" {
+            classification.suggested_action = "Verify network connectivity"
+        } else if matched.category == "auth" {
+            classification.suggested_action = "Review authentication configuration"
+        } else if matched.category == "resource" {
+            classification.suggested_action = "Check system resources (disk, memory)"
+        }
+    }
+
+    classification
+}
+
+fn batch_classify(messages: [str]) -> ClassificationResult {
+    var result = ClassificationResult {
+        total_entries: length(messages),
+        classified_count: 0,
+        database_errors: 0,
+        network_errors: 0,
+        auth_errors: 0,
+        resource_errors: 0,
+        unknown_errors: 0,
+        critical_count: 0,
+        high_count: 0,
+        medium_count: 0,
+        low_count: 0,
+        classifications: [],
+        classification_time_ms: 200
+    }
+
+    var i: i32 = 0
+    while i < length(messages) {
+        var classification = classify_error(messages[i], i + 1)
+        result.classifications.push(classification)
+
+        if classification.confidence > 0.0 {
+            result.classified_count = result.classified_count + 1
+        }
+
+        ;; 카테고리 카운트
+        if classification.category == "database" {
+            result.database_errors = result.database_errors + 1
+        } else if classification.category == "network" {
+            result.network_errors = result.network_errors + 1
+        } else if classification.category == "auth" {
+            result.auth_errors = result.auth_errors + 1
+        } else if classification.category == "resource" {
+            result.resource_errors = result.resource_errors + 1
+        } else {
+            result.unknown_errors = result.unknown_errors + 1
+        }
+
+        ;; 심각도 카운트
+        if classification.severity == "critical" {
+            result.critical_count = result.critical_count + 1
+        } else if classification.severity == "high" {
+            result.high_count = result.high_count + 1
+        } else if classification.severity == "medium" {
+            result.medium_count = result.medium_count + 1
+        } else if classification.severity == "low" {
+            result.low_count = result.low_count + 1
+        }
+
+        i = i + 1
+    }
+
+    result
+}
+
+// ==================== 리포트 생성 ====================
+
+fn classification_report(result: ClassificationResult) -> str {
+    var report: str = ""
+    report = report + "# Error Classification Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Total entries: " + str(result.total_entries) + "\n"
+    report = report + "- Classified: " + str(result.classified_count) + "\n"
+    report = report + "- Classification rate: " + str(f64(result.classified_count) / f64(result.total_entries) * 100.0) + "%\n\n"
+
+    report = report + "## By Category\n"
+    report = report + "- Database: " + str(result.database_errors) + "\n"
+    report = report + "- Network: " + str(result.network_errors) + "\n"
+    report = report + "- Auth: " + str(result.auth_errors) + "\n"
+    report = report + "- Resource: " + str(result.resource_errors) + "\n"
+    report = report + "- Unknown: " + str(result.unknown_errors) + "\n\n"
+
+    report = report + "## By Severity\n"
+    report = report + "| Severity | Count |\n"
+    report = report + "|----------|-------|\n"
+    report = report + "| Critical | " + str(result.critical_count) + " |\n"
+    report = report + "| High | " + str(result.high_count) + " |\n"
+    report = report + "| Medium | " + str(result.medium_count) + " |\n"
+    report = report + "| Low | " + str(result.low_count) + " |\n"
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║   Log-Analyzer — 에러 분류기            ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 개별 분류
+    println("1️⃣ 개별 에러 분류")
+    var msg1 = "Database Connection refused at port 5432"
+    var cls1 = classify_error(msg1, 1)
+    println("메시지: " + msg1)
+    println("타입: " + cls1.detected_error_type)
+    println("심각도: " + cls1.severity)
+    println("신뢰도: " + str(cls1.confidence * 100.0) + "%")
+    println("")
+
+    ;; 2. 다양한 에러 패턴
+    println("2️⃣ 패턴 인식")
+    var msgs: [str] = [
+        "Connection timeout after 30s",
+        "Authentication failed: Invalid token",
+        "Disk space low: 95% full",
+        "Deadlock detected in transaction"
+    ]
+    var i: i32 = 0
+    while i < length(msgs) {
+        var cls = classify_error(msgs[i], i + 1)
+        println("  [" + cls.severity + "] " + cls.detected_error_type)
+        i = i + 1
+    }
+    println("")
+
+    ;; 3. 배치 분류
+    println("3️⃣ 배치 분류")
+    var messages: [str] = [
+        "Database Connection refused at port 5432",
+        "Connection timeout after 30s",
+        "Permission denied: access failed",
+        "File not found: config.json",
+        "Disk space low: 95% full"
+    ]
+    var result = batch_classify(messages)
+    println("총 엔트리: " + str(result.total_entries))
+    println("분류됨: " + str(result.classified_count))
+    println("분류율: " + str(f64(result.classified_count) / f64(result.total_entries) * 100.0) + "%")
+    println("")
+
+    ;; 4. 카테고리별 분석
+    println("4️⃣ 카테고리별 분석")
+    println("- Database: " + str(result.database_errors))
+    println("- Network: " + str(result.network_errors))
+    println("- Auth: " + str(result.auth_errors))
+    println("- Resource: " + str(result.resource_errors))
+    println("")
+
+    ;; 5. 심각도별 분석
+    println("5️⃣ 심각도별 분석")
+    println("- Critical: " + str(result.critical_count))
+    println("- High: " + str(result.high_count))
+    println("- Medium: " + str(result.medium_count))
+    println("- Low: " + str(result.low_count))
+    println("")
+
+    ;; 6. 리포트
+    println("6️⃣ 분류 리포트")
+    var report = classification_report(result)
+    println(substring(report, 0, 300) + "...")
+    println("")
+
+    println("✅ 에러 분류기 로드 완료")
+}

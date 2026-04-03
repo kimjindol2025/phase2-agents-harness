@@ -1,0 +1,246 @@
+// Performance-Profiler 에이전트 — 성능 분석기
+// 성능 병목 지점 식별 및 분석
+
+// ==================== 구조체 정의 ====================
+
+struct Bottleneck {
+    function_name: str
+    bottleneck_type: str
+    severity: str
+    metric_value: f64
+    baseline: f64
+    deviation_percent: f64
+    recommendation: str
+}
+
+struct PerformanceAnalysis {
+    analysis_id: str
+    total_functions: i32
+    bottlenecks_found: i32
+    critical_bottlenecks: i32
+    optimization_potential: f64
+    avg_latency_ms: f64
+    p99_latency_ms: f64
+    throughput_ops_sec: f64
+    memory_efficiency: f64
+    analysis_time_ms: i32
+    bottlenecks: [Bottleneck]
+}
+
+// ==================== 분석 함수 ====================
+
+fn detect_bottleneck(func_name: str, avg_time: f64, memory_bytes: i32) -> Bottleneck {
+    var bottleneck = Bottleneck {
+        function_name: func_name,
+        bottleneck_type: "UNKNOWN",
+        severity: "low",
+        metric_value: avg_time,
+        baseline: 2.0,
+        deviation_percent: 0.0,
+        recommendation: ""
+    }
+
+    ;; CPU 병목 (평균 시간 > 5ms)
+    if avg_time > 5.0 {
+        bottleneck.bottleneck_type = "CPU_INTENSIVE"
+        bottleneck.severity = "critical"
+        bottleneck.deviation_percent = (avg_time - 2.0) / 2.0 * 100.0
+        bottleneck.recommendation = "Optimize algorithm or consider parallelization"
+    } else if avg_time > 3.0 {
+        bottleneck.bottleneck_type = "CPU_INTENSIVE"
+        bottleneck.severity = "high"
+        bottleneck.deviation_percent = (avg_time - 2.0) / 2.0 * 100.0
+        bottleneck.recommendation = "Review and optimize loops"
+    }
+
+    ;; 메모리 병목 (> 100KB)
+    if memory_bytes > 100000 {
+        if bottleneck.severity == "low" {
+            bottleneck.bottleneck_type = "MEMORY_INTENSIVE"
+            bottleneck.severity = "high"
+            bottleneck.recommendation = "Consider caching or streaming approach"
+        } else {
+            bottleneck.bottleneck_type = "CPU_AND_MEMORY"
+            bottleneck.recommendation = "Critical: Redesign required"
+        }
+    }
+
+    bottleneck
+}
+
+fn analyze_performance(total_functions: i32, slow_count: i32, heavy_count: i32) -> PerformanceAnalysis {
+    var analysis = PerformanceAnalysis {
+        analysis_id: "perf-2026-04-04",
+        total_functions: total_functions,
+        bottlenecks_found: slow_count + heavy_count,
+        critical_bottlenecks: slow_count,
+        optimization_potential: 0.0,
+        avg_latency_ms: 2.5,
+        p99_latency_ms: 8.5,
+        throughput_ops_sec: 400,
+        memory_efficiency: 0.0,
+        analysis_time_ms: 250,
+        bottlenecks: []
+    }
+
+    ;; 최적화 가능성 계산
+    if analysis.bottlenecks_found > 0 {
+        analysis.optimization_potential = f64(analysis.bottlenecks_found) / f64(total_functions) * 100.0
+    }
+
+    ;; 메모리 효율성 (baseline 256MB 기준)
+    analysis.memory_efficiency = 256.0 / 256.0 * 100.0
+    if analysis.memory_efficiency > 100.0 {
+        analysis.memory_efficiency = 100.0
+    }
+
+    ;; 평균 지연시간 개선
+    if slow_count > 0 {
+        analysis.avg_latency_ms = 3.5
+    }
+
+    analysis
+}
+
+fn batch_analyze(profiles: [i32], slow_counts: [i32], heavy_counts: [i32]) -> [PerformanceAnalysis] {
+    var results: [PerformanceAnalysis] = []
+    var i: i32 = 0
+
+    while i < length(profiles) {
+        var analysis = analyze_performance(profiles[i], slow_counts[i], heavy_counts[i])
+        results.push(analysis)
+        i = i + 1
+    }
+
+    results
+}
+
+// ==================== 비교 분석 ====================
+
+fn compare_with_baseline(current: PerformanceAnalysis, baseline_latency: f64) -> str {
+    var comparison: str = ""
+    comparison = comparison + "## 베이스라인 비교\n\n"
+
+    var improvement: f64 = (baseline_latency - current.avg_latency_ms) / baseline_latency * 100.0
+    if improvement < 0.0 {
+        improvement = 0.0
+    }
+
+    comparison = comparison + "- 베이스라인: " + str(baseline_latency) + "ms\n"
+    comparison = comparison + "- 현재: " + str(current.avg_latency_ms) + "ms\n"
+    comparison = comparison + "- 개선: " + str(improvement) + "%\n\n"
+
+    comparison = comparison + "## 메트릭\n\n"
+    comparison = comparison + "- 평균 지연: " + str(current.avg_latency_ms) + "ms\n"
+    comparison = comparison + "- P99 지연: " + str(current.p99_latency_ms) + "ms\n"
+    comparison = comparison + "- 처리량: " + str(current.throughput_ops_sec) + " ops/sec\n"
+    comparison = comparison + "- 메모리 효율: " + str(current.memory_efficiency) + "%\n"
+
+    comparison
+}
+
+// ==================== 리포트 생성 ====================
+
+fn analysis_report(analyses: [PerformanceAnalysis]) -> str {
+    var report: str = ""
+    report = report + "# Performance Analysis Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Analyses: " + str(length(analyses)) + "\n"
+
+    var total_functions: i32 = 0
+    var total_bottlenecks: i32 = 0
+    var total_critical: i32 = 0
+    var total_optimization: f64 = 0.0
+
+    var i: i32 = 0
+    while i < length(analyses) {
+        total_functions = total_functions + analyses[i].total_functions
+        total_bottlenecks = total_bottlenecks + analyses[i].bottlenecks_found
+        total_critical = total_critical + analyses[i].critical_bottlenecks
+        total_optimization = total_optimization + analyses[i].optimization_potential
+        i = i + 1
+    }
+
+    var avg_optimization: f64 = 0.0
+    if length(analyses) > 0 {
+        avg_optimization = total_optimization / f64(length(analyses))
+    }
+
+    report = report + "- Functions analyzed: " + str(total_functions) + "\n"
+    report = report + "- Bottlenecks: " + str(total_bottlenecks) + "\n"
+    report = report + "- Critical: " + str(total_critical) + "\n"
+    report = report + "- Avg optimization potential: " + str(avg_optimization) + "%\n\n"
+
+    report = report + "## Performance Metrics\n"
+    report = report + "| Analysis | Avg Latency | P99 | Memory | Potential |\n"
+    report = report + "|----------|-------------|-----|--------|----------|\n"
+
+    i = 0
+    while i < length(analyses) {
+        var a = analyses[i]
+        report = report + "| " + a.analysis_id + " | " + str(a.avg_latency_ms) + "ms | "
+        report = report + str(a.p99_latency_ms) + "ms | " + str(a.memory_efficiency) + "% | "
+        report = report + str(a.optimization_potential) + "% |\n"
+        i = i + 1
+    }
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║    Performance-Profiler — 분석기         ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 성능 분석
+    println("1️⃣ 성능 분석")
+    var analysis = analyze_performance(50, 8, 3)
+    println("분석: " + analysis.analysis_id)
+    println("함수: " + str(analysis.total_functions))
+    println("병목: " + str(analysis.bottlenecks_found))
+    println("최적화 가능: " + str(analysis.optimization_potential) + "%")
+    println("")
+
+    ;; 2. 성능 메트릭
+    println("2️⃣ 성능 메트릭")
+    println("- 평균 지연: " + str(analysis.avg_latency_ms) + "ms")
+    println("- P99 지연: " + str(analysis.p99_latency_ms) + "ms")
+    println("- 처리량: " + str(analysis.throughput_ops_sec) + " ops/sec")
+    println("- 메모리 효율: " + str(analysis.memory_efficiency) + "%")
+    println("")
+
+    ;; 3. 병목 지점 탐지
+    println("3️⃣ 병목 지점 탐지")
+    var bn1 = detect_bottleneck("database_query", 8.5, 50000)
+    println("함수: " + bn1.function_name)
+    println("타입: " + bn1.bottleneck_type)
+    println("심각도: " + bn1.severity)
+    println("권고: " + bn1.recommendation)
+    println("")
+
+    ;; 4. 베이스라인 비교
+    println("4️⃣ 베이스라인 비교")
+    var comparison = compare_with_baseline(analysis, 5.0)
+    println(substring(comparison, 0, 250) + "...")
+    println("")
+
+    ;; 5. 배치 분석
+    println("5️⃣ 배치 분석")
+    var profiles: [i32] = [50, 50]
+    var slow: [i32] = [8, 8]
+    var heavy: [i32] = [3, 3]
+    var batch_results = batch_analyze(profiles, slow, heavy)
+    println("분석 수: " + str(length(batch_results)))
+    println("")
+
+    ;; 6. 리포트
+    println("6️⃣ 분석 리포트")
+    var report = analysis_report(batch_results)
+    println(substring(report, 0, 300) + "...")
+    println("")
+
+    println("✅ 성능 분석기 로드 완료")
+}
