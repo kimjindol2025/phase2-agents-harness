@@ -1,0 +1,319 @@
+// Phase 2 에이전트 하네스 — 프롬프트 체인
+// 다단계 프롬프트 실행 엔진
+
+// ==================== 구조체 정의 ====================
+
+struct PromptStep {
+    name: str
+    template: str
+    input_keys: [str]
+    output_key: str
+    model: str
+    temperature: f64
+    max_tokens: i32
+}
+
+struct PromptChain {
+    name: str
+    steps: [PromptStep]
+    context: [str]
+    variables: [str]
+}
+
+struct ChainExecution {
+    chain: str
+    status: str
+    step_results: [str]
+    final_output: str
+    elapsed_ms: i32
+}
+
+// ==================== PromptStep 함수 ====================
+
+fn step_new(name: str, template: str, model: str) -> PromptStep {
+    PromptStep {
+        name: name,
+        template: template,
+        input_keys: [],
+        output_key: "result",
+        model: model,
+        temperature: 0.7,
+        max_tokens: 2000
+    }
+}
+
+fn step_add_input_key(step: PromptStep, key: str) -> PromptStep {
+    step.input_keys.push(key)
+    step
+}
+
+fn step_set_output_key(step: PromptStep, key: str) -> PromptStep {
+    step.output_key = key
+    step
+}
+
+fn step_set_temperature(step: PromptStep, temp: f64) -> PromptStep {
+    step.temperature = temp
+    step
+}
+
+fn step_set_max_tokens(step: PromptStep, tokens: i32) -> PromptStep {
+    step.max_tokens = tokens
+    step
+}
+
+fn step_execute(step: PromptStep, input: str) -> str {
+    ;; 실제 실행 (흉내)
+    var output = "[" + step.name + "] Processed with " + step.model + ": " + substring(input, 0, 50)
+    output
+}
+
+fn step_display(step: PromptStep) -> str {
+    var s: str = ""
+    s = s + "PromptStep { "
+    s = s + "name=" + step.name + ", "
+    s = s + "model=" + step.model + ", "
+    s = s + "inputs=" + str(length(step.input_keys)) + ", "
+    s = s + "output=" + step.output_key + " }"
+    s
+}
+
+// ==================== PromptChain 함수 ====================
+
+fn chain_new(name: str) -> PromptChain {
+    PromptChain {
+        name: name,
+        steps: [],
+        context: [],
+        variables: []
+    }
+}
+
+fn chain_add_step(chain: PromptChain, step: PromptStep) -> PromptChain {
+    chain.steps.push(step)
+    chain
+}
+
+fn chain_add_context(chain: PromptChain, context: str) -> PromptChain {
+    chain.context.push(context)
+    chain
+}
+
+fn chain_add_variable(chain: PromptChain, key: str) -> PromptChain {
+    chain.variables.push(key)
+    chain
+}
+
+fn chain_step_count(chain: PromptChain) -> i32 {
+    length(chain.steps)
+}
+
+fn chain_display(chain: PromptChain) -> str {
+    var s: str = ""
+    s = s + "PromptChain { "
+    s = s + "name=" + chain.name + ", "
+    s = s + "steps=" + str(chain_step_count(chain)) + ", "
+    s = s + "context=" + str(length(chain.context)) + ", "
+    s = s + "vars=" + str(length(chain.variables)) + " }"
+    s
+}
+
+// ==================== 체인 실행 ====================
+
+fn chain_execute(chain: PromptChain, input: str) -> ChainExecution {
+    var exec = ChainExecution {
+        chain: chain.name,
+        status: "pending",
+        step_results: [],
+        final_output: "",
+        elapsed_ms: 0
+    }
+
+    ;; 빈 체인 검증
+    if length(chain.steps) == 0 {
+        exec.status = "empty"
+        exec.final_output = "[WARNING] Empty chain - no steps to execute"
+        return exec
+    }
+
+    var current_input = input
+    var i: i32 = 0
+
+    while i < length(chain.steps) {
+        var step = chain.steps[i]
+        var step_output = step_execute(step, current_input)
+        exec.step_results.push(step_output)
+
+        ;; 다음 스텝의 입력으로 사용
+        current_input = step_output
+
+        i = i + 1
+    }
+
+    exec.final_output = current_input
+    exec.status = "success"
+    exec.elapsed_ms = length(chain.steps) * 50 ;; 단계당 50ms 가정
+
+    exec
+}
+
+fn chain_execute_with_context(chain: PromptChain, input: str, context: [str]) -> ChainExecution {
+    var chain_with_context = chain
+    var i: i32 = 0
+    while i < length(context) {
+        chain_with_context = chain_add_context(chain_with_context, context[i])
+        i = i + 1
+    }
+
+    chain_execute(chain_with_context, input)
+}
+
+// ==================== 프롬프트 템플릿 라이브러리 ====================
+
+fn template_analyze_query() -> str {
+    "Analyze the SQL query below and identify performance issues:\n\n$QUERY\n\nProvide:\n1. Issues found\n2. Suggested indexes\n3. Optimization strategy"
+}
+
+fn template_suggest_indexes() -> str {
+    "Based on the query analysis below, suggest specific database indexes:\n\n$ANALYSIS\n\nProvide DDL statements."
+}
+
+fn template_generate_sql() -> str {
+    "Generate optimized SQL based on this analysis:\n\n$OPTIMIZATION\n\nProvide the complete SQL code."
+}
+
+fn template_security_scan() -> str {
+    "Scan the code for security vulnerabilities:\n\n$CODE\n\nCheck for: SQL injection, XSS, authentication issues, etc."
+}
+
+fn template_document_api() -> str {
+    "Generate API documentation from this code:\n\n$CODE\n\nInclude: endpoints, parameters, response format, examples."
+}
+
+// ==================== 표준 체인 팩토리 ====================
+
+fn chain_sql_optimization() -> PromptChain {
+    var chain = chain_new("SQL-Optimization-Pipeline")
+
+    var step1 = step_new("analyze", template_analyze_query(), "claude-opus-4-6")
+    step1 = step_set_output_key(step1, "analysis")
+    chain = chain_add_step(chain, step1)
+
+    var step2 = step_new("suggest-indexes", template_suggest_indexes(), "claude-opus-4-6")
+    step2 = step_set_output_key(step2, "indexes")
+    chain = chain_add_step(chain, step2)
+
+    var step3 = step_new("generate-sql", template_generate_sql(), "claude-opus-4-6")
+    step3 = step_set_output_key(step3, "optimized_sql")
+    chain = chain_add_step(chain, step3)
+
+    chain
+}
+
+fn chain_security_audit() -> PromptChain {
+    var chain = chain_new("Security-Audit-Pipeline")
+
+    var step1 = step_new("scan-code", template_security_scan(), "claude-opus-4-6")
+    step1 = step_set_temperature(step1, 0.3)
+    chain = chain_add_step(chain, step1)
+
+    chain
+}
+
+fn chain_api_documentation() -> PromptChain {
+    var chain = chain_new("API-Documentation-Pipeline")
+
+    var step1 = step_new("document", template_document_api(), "claude-haiku-4-5")
+    chain = chain_add_step(chain, step1)
+
+    chain
+}
+
+// ==================== 체인 빌더 (체이닝) ====================
+
+struct ChainBuilder {
+    chain: PromptChain
+}
+
+fn builder_new(name: str) -> ChainBuilder {
+    ChainBuilder {
+        chain: chain_new(name)
+    }
+}
+
+fn builder_add_step(builder: ChainBuilder, step: PromptStep) -> ChainBuilder {
+    builder.chain = chain_add_step(builder.chain, step)
+    builder
+}
+
+fn builder_add_context(builder: ChainBuilder, ctx: str) -> ChainBuilder {
+    builder.chain = chain_add_context(builder.chain, ctx)
+    builder
+}
+
+fn builder_build(builder: ChainBuilder) -> PromptChain {
+    builder.chain
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║  Phase 2 에이전트 하네스 — 프롬프트 체인  ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 기본 스텝 테스트
+    println("1️⃣ PromptStep 테스트")
+    var step = step_new("analyze-query", template_analyze_query(), "claude-opus-4-6")
+    step = step_set_temperature(step, 0.5)
+    step = step_set_max_tokens(step, 1000)
+    println(step_display(step))
+    println("")
+
+    ;; 2. 체인 생성 테스트
+    println("2️⃣ PromptChain 생성")
+    var chain = chain_sql_optimization()
+    println(chain_display(chain))
+    println("체인 단계:")
+    var i: i32 = 0
+    while i < chain_step_count(chain) {
+        println("  " + str(i + 1) + ". " + chain.steps[i].name)
+        i = i + 1
+    }
+    println("")
+
+    ;; 3. 체인 실행 테스트
+    println("3️⃣ 체인 실행")
+    var test_query = "SELECT * FROM users WHERE id IN (SELECT user_id FROM orders)"
+    var execution = chain_execute(chain, test_query)
+    println("상태: " + execution.status)
+    println("소요 시간: " + str(execution.elapsed_ms) + "ms")
+    println("단계 수: " + str(length(execution.step_results)))
+    println("최종 출력: " + substring(execution.final_output, 0, 100) + "...")
+    println("")
+
+    ;; 4. 체인 빌더 테스트
+    println("4️⃣ 체인 빌더 (Fluent API)")
+    var custom_chain = builder_new("Custom-Pipeline")
+    var custom_step1 = step_new("step-1", "Template 1", "claude-haiku-4-5")
+    var custom_step2 = step_new("step-2", "Template 2", "claude-opus-4-6")
+    custom_chain = builder_add_step(custom_chain, custom_step1)
+    custom_chain = builder_add_step(custom_chain, custom_step2)
+    custom_chain = builder_add_context(custom_chain, "Some context")
+    var built = builder_build(custom_chain)
+    println(chain_display(built))
+    println("")
+
+    ;; 5. 표준 파이프라인 목록
+    println("5️⃣ 표준 파이프라인")
+    var sql_chain = chain_sql_optimization()
+    var sec_chain = chain_security_audit()
+    var api_chain = chain_api_documentation()
+    println("- " + chain_display(sql_chain))
+    println("- " + chain_display(sec_chain))
+    println("- " + chain_display(api_chain))
+    println("")
+
+    println("✅ 프롬프트 체인 로드 완료")
+}

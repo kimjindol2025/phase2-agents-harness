@@ -1,0 +1,202 @@
+// SQL-Optimizer 에이전트 — SQL 최적화 생성기
+// 최적화 SQL 생성 + DDL 생성
+
+// ==================== 구조체 정의 ====================
+
+struct OptimizationResult {
+    original_sql: str
+    optimized_sql: str
+    indexes_ddl: [str]
+    cache_key: str
+    estimated_speedup: f64
+    confidence: f64
+}
+
+// ==================== 최적화 함수 ====================
+
+fn optimize_query(sql: str, issues: [str]) -> OptimizationResult {
+    var result = OptimizationResult {
+        original_sql: sql,
+        optimized_sql: "",
+        indexes_ddl: [],
+        cache_key: "",
+        estimated_speedup: 1.0,
+        confidence: 0.5
+    }
+
+    ;; 최적화 전략 1: full scan 감지 시 WHERE 추가
+    if contains(sql, "SELECT *") && !contains(sql, "WHERE") {
+        result.optimized_sql = "WITH filtered AS (" + sql + ") SELECT * FROM filtered LIMIT 1000"
+        result.estimated_speedup = 5.0
+    } else {
+        result.optimized_sql = sql
+    }
+
+    ;; 최적화 전략 2: 인덱스 필요한 경우
+    if contains(sql, "WHERE") {
+        result.indexes_ddl.push(generate_where_index(sql))
+        result.estimated_speedup = result.estimated_speedup * 2.0
+    }
+
+    if contains(sql, "ORDER BY") {
+        result.indexes_ddl.push(generate_order_index(sql))
+        result.estimated_speedup = result.estimated_speedup * 1.5
+    }
+
+    if contains(sql, "GROUP BY") {
+        result.indexes_ddl.push(generate_group_index(sql))
+        result.estimated_speedup = result.estimated_speedup * 1.3
+    }
+
+    ;; 캐시 키 생성
+    result.cache_key = "query_" + str(hash_string(sql))
+
+    ;; 신뢰도 계산 (최대 1.0)
+    var raw_confidence = 0.6 + f64(length(result.indexes_ddl)) * 0.15
+    if raw_confidence > 1.0 {
+        result.confidence = 1.0
+    } else {
+        result.confidence = raw_confidence
+    }
+
+    result
+}
+
+fn generate_where_index(sql: str) -> str {
+    var index = "CREATE INDEX idx_where_filter ON table_name(column_name);"
+    index
+}
+
+fn generate_order_index(sql: str) -> str {
+    var index = "CREATE INDEX idx_order_columns ON table_name(column_name) ASC;"
+    index
+}
+
+fn generate_group_index(sql: str) -> str {
+    var index = "CREATE INDEX idx_group_columns ON table_name(group_column);"
+    index
+}
+
+fn generate_cache_layer(sql: str) -> str {
+    var cache = ""
+    cache = cache + "// Cache layer for: " + substring(sql, 0, 50) + "\n"
+    cache = cache + "CACHE_RESULTS = true\n"
+    cache = cache + "TTL = 3600  ;; 1 hour\n"
+    cache
+}
+
+fn generate_optimization_report(results: [OptimizationResult]) -> str {
+    var report: str = ""
+    report = report + "# SQL Optimization Report\n\n"
+
+    var i: i32 = 0
+    while i < length(results) {
+        report = report + "## Query " + str(i + 1) + "\n"
+        report = report + "**Estimated Speedup:** " + str(results[i].estimated_speedup) + "x\n"
+        report = report + "**Confidence:** " + str(results[i].confidence * 100.0) + "%\n"
+        report = report + "**Indexes:** " + str(length(results[i].indexes_ddl)) + "\n\n"
+        i = i + 1
+    }
+
+    report
+}
+
+fn batch_optimize(sqls: [str], issues_batch: [[str]]) -> [OptimizationResult] {
+    var results: [OptimizationResult] = []
+    var i: i32 = 0
+
+    while i < length(sqls) {
+        var opt = optimize_query(sqls[i], issues_batch[i])
+        results.push(opt)
+        i = i + 1
+    }
+
+    results
+}
+
+// ==================== 헬퍼 함수 ====================
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i <= length(text) - length(pattern) {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn hash_string(s: str) -> i32 {
+    var hash: i32 = 0
+    var i: i32 = 0
+    while i < length(s) {
+        hash = hash + char_code(substring(s, i, i + 1))
+        i = i + 1
+    }
+    hash
+}
+
+// ==================== 결과 표시 ====================
+
+fn optimization_result_display(result: OptimizationResult) -> str {
+    var s: str = ""
+    s = s + "OptimizationResult { "
+    s = s + "speedup=" + str(result.estimated_speedup) + "x, "
+    s = s + "indexes=" + str(length(result.indexes_ddl)) + ", "
+    s = s + "confidence=" + str(result.confidence * 100.0) + "% }"
+    s
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║     SQL-Optimizer — 최적화 생성기         ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 테스트 쿼리
+    var q1 = "SELECT * FROM users"
+    var q2 = "SELECT * FROM orders WHERE status = 'pending'"
+    var q3 = "SELECT user_id, COUNT(*) FROM orders GROUP BY user_id"
+
+    ;; 최적화 1: Full scan
+    println("1️⃣ Full Scan 최적화")
+    var issues1: [str] = ["full_scan"]
+    var opt1 = optimize_query(q1, issues1)
+    println(optimization_result_display(opt1))
+    println("최적화 속도: " + str(opt1.estimated_speedup) + "x")
+    println("")
+
+    ;; 최적화 2: WHERE 절
+    println("2️⃣ WHERE 절 최적화")
+    var issues2: [str] = ["missing_index"]
+    var opt2 = optimize_query(q2, issues2)
+    println(optimization_result_display(opt2))
+    println("생성된 인덱스: " + str(length(opt2.indexes_ddl)))
+    println("")
+
+    ;; 최적화 3: GROUP BY
+    println("3️⃣ GROUP BY 최적화")
+    var issues3: [str] = ["group_index_needed"]
+    var opt3 = optimize_query(q3, issues3)
+    println(optimization_result_display(opt3))
+    println("")
+
+    ;; 배치 최적화
+    println("4️⃣ 배치 최적화")
+    var sqls: [str] = [q1, q2, q3]
+    var issues_list: [[str]] = [issues1, issues2, issues3]
+    var batch_results = batch_optimize(sqls, issues_list)
+    println("최적화 완료: " + str(length(batch_results)) + "개")
+    println("")
+
+    ;; 리포트
+    println("5️⃣ 최적화 리포트")
+    var report = generate_optimization_report(batch_results)
+    println(substring(report, 0, 200) + "...")
+    println("")
+
+    println("✅ 최적화 생성기 로드 완료")
+}
