@@ -1,0 +1,70 @@
+// Type-Inferrer — 추론기
+// 타입 추론 규칙 적용 + 개선 제안
+
+fn infer_type_from_assignment(value: str) -> str {
+    if contains(value, "\"") {
+        return "str"
+    }
+    if contains(value, ".") {
+        return "f64"
+    }
+    "i32"
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn suggest_type_annotation(var_name: str, inferred_type: str) -> str {
+    var suggestion: str = "var " + var_name + ": " + inferred_type
+    suggestion
+}
+
+fn analyze_type_safety(total_vars: i32, typed_vars: i32) -> f64 {
+    if total_vars == 0 {
+        return 0.0
+    }
+    f64(typed_vars) / f64(total_vars) * 100.0
+}
+
+fn generate_type_annotations(untyped_vars: i32) -> [str] {
+    var annotations: [str] = []
+    var i: i32 = 0
+
+    while i < untyped_vars {
+        var annotation: str = "var var_" + str(i) + ": unknown_type"
+        annotations = append(annotations, annotation)
+        i = i + 1
+    }
+
+    annotations
+}
+
+fn migration_effort(issues: i32) -> i32 {
+    ;; 이슈당 15분
+    var minutes: i32 = issues * 15
+    var hours: i32 = minutes / 60
+    if hours == 0 && issues > 0 {
+        hours = 1
+    }
+    hours
+}
+
+fn main() {
+    println("✅ Type-Inferrer Inferrer 로드 완료")
+}

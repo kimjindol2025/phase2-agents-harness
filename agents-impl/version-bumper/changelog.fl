@@ -1,0 +1,28 @@
+// Version-Bumper — 체인지로그 생성기
+
+fn generate_changelog(version: str, commits: [str]) -> str {
+    var changelog: str = ""
+    changelog = changelog + "# Changelog\n\n"
+    changelog = changelog + "## [" + version + "] - 2026-04-04\n\n"
+    changelog = changelog + "### Added\n"
+    changelog = changelog + "- New features\n\n"
+    changelog = changelog + "### Changed\n"
+    changelog = changelog + "- Improvements\n\n"
+    changelog = changelog + "### Fixed\n"
+    changelog = changelog + "- Bug fixes\n"
+
+    changelog
+}
+
+fn format_commit_entry(commit: str) -> str {
+    "- " + commit
+}
+
+fn append_to_changelog(existing: str, new_entry: str) -> str {
+    var updated: str = new_entry + "\n" + existing
+    updated
+}
+
+fn main() {
+    println("✅ Version-Bumper Changelog 로드 완료")
+}

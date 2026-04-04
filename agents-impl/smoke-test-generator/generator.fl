@@ -1,0 +1,40 @@
+// Smoke-Test-Generator — 생성기
+
+struct SmokeTest {
+    test_id: str
+    endpoint: str
+    expected_status: i32
+    description: str
+}
+
+fn generate_test_for_endpoint(endpoint: str, method: str) -> SmokeTest {
+    var test = SmokeTest {
+        test_id: "smoke_1",
+        endpoint: endpoint,
+        expected_status: 200,
+        description: "Smoke test for " + endpoint
+    }
+    test
+}
+
+fn generate_all_tests(endpoints: [str]) -> [SmokeTest] {
+    var tests: [SmokeTest] = []
+    var i: i32 = 0
+
+    while i < length(endpoints) {
+        var test = SmokeTest {
+            test_id: "smoke_" + str(i),
+            endpoint: endpoints[i],
+            expected_status: 200,
+            description: "Test " + str(i)
+        }
+        tests = append(tests, test)
+        i = i + 1
+    }
+
+    tests
+}
+
+fn main() {
+    println("✅ Smoke-Test-Generator Generator 로드 완료")
+}

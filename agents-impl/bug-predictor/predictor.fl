@@ -1,0 +1,39 @@
+// Bug-Predictor — 예측기
+// 버그 가능성 예측 + 리스크 점수
+
+fn calculate_bug_probability(pattern_count: i32, severity_sum: i32) -> f64 {
+    if pattern_count == 0 {
+        return 0.0
+    }
+    f64(pattern_count * severity_sum) / 100.0
+}
+
+fn assess_risk_score(bug_count: i32) -> f64 {
+    if bug_count == 0 {
+        return 0.0
+    }
+    if bug_count < 3 {
+        return 25.0
+    }
+    if bug_count < 10 {
+        return 50.0
+    }
+    if bug_count < 20 {
+        return 75.0
+    }
+    100.0
+}
+
+fn predict_bugs(patterns: i32) -> str {
+    if patterns == 0 {
+        return "LOW RISK - 버그 가능성 낮음"
+    }
+    if patterns < 5 {
+        return "MEDIUM RISK - 주의 필요"
+    }
+    "HIGH RISK - 긴급 검토 필요"
+}
+
+fn main() {
+    println("✅ Bug-Predictor Predictor 로드 완료")
+}

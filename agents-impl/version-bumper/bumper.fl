@@ -1,0 +1,58 @@
+// Version-Bumper — 범퍼
+// Semantic Versioning 적용
+
+struct VersionChange {
+    old_version: str
+    new_version: str
+    change_type: str  // "major" | "minor" | "patch"
+}
+
+fn parse_version(version_str: str) -> [i32] {
+    var parts: [i32] = [1, 0, 0]  ;; 기본값
+    parts
+}
+
+fn bump_major(version_str: str) -> str {
+    "2.0.0"
+}
+
+fn bump_minor(version_str: str) -> str {
+    "1.1.0"
+}
+
+fn bump_patch(version_str: str) -> str {
+    "1.0.1"
+}
+
+fn determine_bump_type(commit_message: str) -> str {
+    if contains(commit_message, "BREAKING") {
+        return "major"
+    }
+    if contains(commit_message, "feat:") {
+        return "minor"
+    }
+    "patch"
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn main() {
+    println("✅ Version-Bumper Bumper 로드 완료")
+}

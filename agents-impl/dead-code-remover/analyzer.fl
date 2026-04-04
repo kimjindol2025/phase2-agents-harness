@@ -1,0 +1,93 @@
+// Dead-Code-Remover — 분석기
+// 제거 안전성 평가
+
+fn assess_removal_safety(item_type: str, usage_count: i32, name: str) -> bool {
+    ;; 사용되지 않으면 제거 안전
+    if usage_count == 0 {
+        return true
+    }
+
+    ;; 테스트 코드는 안전
+    if contains(name, "test") {
+        return true
+    }
+
+    ;; 프라이빗 함수/변수는 비교적 안전
+    if contains(name, "_") {
+        return true
+    }
+
+    false
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn analyze_impact(item_type: str, item_name: str) -> str {
+    if item_type == "function" {
+        return "MEDIUM"
+    }
+    if item_type == "variable" {
+        return "LOW"
+    }
+    if item_type == "import" {
+        return "HIGH"  ;; 의존성 제거는 영향 큼
+    }
+    "UNKNOWN"
+}
+
+fn estimate_removal_effort(items: i32) -> i32 {
+    ;; 항목당 5분 (=0.083시간)
+    var minutes: i32 = items * 5
+    var hours: i32 = minutes / 60
+    if hours == 0 && items > 0 {
+        hours = 1
+    }
+    hours
+}
+
+fn prioritize_removal(unused_items: [str]) -> [str] {
+    ;; 우선순위: import > variable > function
+    var priority: [str] = []
+    var i: i32 = 0
+
+    while i < length(unused_items) {
+        ;; 간단한 정렬 시뮬레이션
+        priority = append(priority, unused_items[i])
+        i = i + 1
+    }
+
+    priority
+}
+
+fn analyze_unused_code(unused_count: i32, total_items: i32) -> str {
+    var percentage: f64 = f64(unused_count) / f64(total_items) * 100.0
+
+    if percentage > 30.0 {
+        return "HIGH - 상당한 양의 미사용 코드"
+    }
+    if percentage > 10.0 {
+        return "MEDIUM - 중간 정도의 기술 부채"
+    }
+    "LOW - 최소한의 미사용 코드"
+}
+
+fn main() {
+    println("✅ Dead-Code-Remover Analyzer 로드 완료")
+}

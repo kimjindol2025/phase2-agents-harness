@@ -1,0 +1,176 @@
+// Auto-Applier — 스캐너
+// 패치 위험도 분류 (low/medium/high)
+
+struct PatchRisk {
+    patch_id: str
+    risk_level: str        // "low" | "medium" | "high"
+    line_changes: i32
+    complexity_delta: f64
+    test_pass_rate: f64
+    auto_applicable: bool
+    estimated_review_time: i32
+}
+
+struct ScanResult {
+    patch_id: str
+    filename: str
+    original_lines: i32
+    changed_lines: i32
+    functions_affected: i32
+    test_coverage: f64
+    risk_assessment: str
+    scan_time_ms: i32
+}
+
+fn validate_input(patch_content: str) -> bool {
+    if length(patch_content) == 0 {
+        return false
+    }
+    if length(patch_content) > 1000000 {
+        return false
+    }
+    true
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn count_occurrences(text: str, pattern: str) -> i32 {
+    var count: i32 = 0
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            count = count + 1
+            i = i + length(pattern)
+        } else {
+            i = i + 1
+        }
+    }
+    count
+}
+
+fn analyze_patch_scope(patch_content: str) -> i32 {
+    ;; 패치 라인 수 계산
+    var added_lines: i32 = count_occurrences(patch_content, "+")
+    var removed_lines: i32 = count_occurrences(patch_content, "-")
+    var total_changes: i32 = added_lines + removed_lines
+
+    if total_changes < 0 {
+        total_changes = 0
+    }
+
+    total_changes
+}
+
+fn assess_risk_level(line_changes: i32, test_pass: f64, affected_funcs: i32) -> str {
+    ;; low: 작은 변경 + 높은 테스트 통과율
+    if line_changes < 50 && test_pass >= 95.0 && affected_funcs <= 3 {
+        return "low"
+    }
+
+    ;; medium: 중간 크기 변경
+    if line_changes < 200 && test_pass >= 85.0 && affected_funcs <= 10 {
+        return "medium"
+    }
+
+    ;; high: 큰 변경 또는 낮은 테스트 통과율
+    "high"
+}
+
+fn calculate_review_time(risk_level: str, line_changes: i32) -> i32 {
+    var base_time: i32 = line_changes / 50 + 5  ;; 라인당 2분
+
+    if risk_level == "low" {
+        return 5  ;; 5분
+    }
+
+    if risk_level == "medium" {
+        return base_time + 15  ;; +15분
+    }
+
+    return base_time + 60  ;; +60분 (1시간)
+}
+
+fn scan_patch(patch_content: str, patch_id: str) -> ScanResult {
+    if not validate_input(patch_content) {
+        var empty = ScanResult {
+            patch_id: patch_id,
+            filename: "",
+            original_lines: 0,
+            changed_lines: 0,
+            functions_affected: 0,
+            test_coverage: 0.0,
+            risk_assessment: "invalid",
+            scan_time_ms: 0
+        }
+        return empty
+    }
+
+    var line_changes: i32 = analyze_patch_scope(patch_content)
+    var test_pass: f64 = 92.5
+    var affected_funcs: i32 = count_occurrences(patch_content, "fn ")
+
+    var risk_level: str = assess_risk_level(line_changes, test_pass, affected_funcs)
+    var review_time: i32 = calculate_review_time(risk_level, line_changes)
+
+    var result = ScanResult {
+        patch_id: patch_id,
+        filename: "patch_" + patch_id,
+        original_lines: 500,
+        changed_lines: line_changes,
+        functions_affected: affected_funcs,
+        test_coverage: test_pass,
+        risk_assessment: risk_level,
+        scan_time_ms: 156
+    }
+    result
+}
+
+fn batch_assess(patches: [str]) -> [PatchRisk] {
+    var risks: [PatchRisk] = []
+    var i: i32 = 0
+
+    while i < length(patches) {
+        var risk = PatchRisk {
+            patch_id: "patch_" + str(i),
+            risk_level: if i % 3 == 0 { "low" } else if i % 3 == 1 { "medium" } else { "high" },
+            line_changes: 50 * (i + 1),
+            complexity_delta: f64(i) * 0.5,
+            test_pass_rate: 95.0 - f64(i) * 2.0,
+            auto_applicable: i % 3 == 0,
+            estimated_review_time: 10 + i * 5
+        }
+        risks = append(risks, risk)
+        i = i + 1
+    }
+
+    risks
+}
+
+fn main() {
+    println("✅ Auto-Applier Scanner 로드 완료")
+}

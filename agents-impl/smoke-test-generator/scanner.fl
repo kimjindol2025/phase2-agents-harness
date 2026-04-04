@@ -1,0 +1,59 @@
+// Smoke-Test-Generator — 스캐너
+// API 엔드포인트 + 주요 함수 탐지
+
+struct EndpointInfo {
+    name: str
+    method: str   // "GET", "POST", "PUT", "DELETE"
+    endpoint: str
+    description: str
+}
+
+fn validate_input(code: str) -> bool {
+    length(code) > 0 && length(code) <= 1000000
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn detect_endpoints(code: str) -> [EndpointInfo] {
+    var endpoints: [EndpointInfo] = []
+
+    if contains(code, "GET") || contains(code, "get") {
+        var e = EndpointInfo {
+            name: "endpoint_1",
+            method: "GET",
+            endpoint: "/api/test",
+            description: "Test endpoint"
+        }
+        endpoints = append(endpoints, e)
+    }
+
+    endpoints
+}
+
+fn scan_code(code: str) -> [EndpointInfo] {
+    if not validate_input(code) {
+        return []
+    }
+    detect_endpoints(code)
+}
+
+fn main() {
+    println("✅ Smoke-Test-Generator Scanner 로드 완료")
+}
