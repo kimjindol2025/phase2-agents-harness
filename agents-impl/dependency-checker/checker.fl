@@ -1,0 +1,178 @@
+// Dependency Checker — 체커
+// 미사용/중복/버전 불일치 분류
+
+fn classify_unused(deps: [Dependency], usage_threshold: i32) -> [Dependency] {
+    var unused: [Dependency] = []
+    var i: i32 = 0
+
+    while i < length(deps) {
+        if deps[i].import_count < usage_threshold {
+            unused = append(unused, deps[i])
+        }
+        i = i + 1
+    }
+
+    unused
+}
+
+fn classify_duplicates(deps: [Dependency]) -> [str] {
+    var duplicates: [str] = []
+    var i: i32 = 0
+
+    while i < length(deps) {
+        var j: i32 = i + 1
+        while j < length(deps) {
+            if deps[i].name == deps[j].name {
+                duplicates = append(duplicates, deps[i].name)
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    duplicates
+}
+
+fn classify_conflicts(deps: [Dependency]) -> [str] {
+    var conflicts: [str] = []
+    var i: i32 = 0
+
+    while i < length(deps) {
+        var j: i32 = i + 1
+        while j < length(deps) {
+            if deps[i].name == deps[j].name && deps[i].version != deps[j].version {
+                var conflict: str = deps[i].name + " (" + deps[i].version + " vs " + deps[j].version + ")"
+                conflicts = append(conflicts, conflict)
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    conflicts
+}
+
+fn detect_circular_refs(deps: [Dependency]) -> [str] {
+    var circular: [str] = []
+    var i: i32 = 0
+
+    ;; 간단한 순환 탐지 시뮬레이션
+    while i < length(deps) {
+        if contains(deps[i].name, "util") && contains(deps[i].name, "core") {
+            circular = append(circular, "util <-> core")
+        }
+        i = i + 1
+    }
+
+    circular
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn calculate_removal_safety(dep: Dependency) -> bool {
+    ;; 사용 횟수 1회 이하면 제거 안전
+    if dep.import_count <= 1 {
+        return true
+    }
+
+    ;; 테스트 모듈은 안전
+    if contains(dep.name, "test") {
+        return true
+    }
+
+    ;; 그 외는 위험
+    false
+}
+
+fn assess_impact(issue_type: str, dep_usage: i32) -> str {
+    if issue_type == "unused" {
+        if dep_usage == 0 {
+            return "high"
+        } else {
+            return "low"
+        }
+    }
+
+    if issue_type == "duplicate" {
+        return "high"
+    }
+
+    if issue_type == "conflict" {
+        return "high"
+    }
+
+    if issue_type == "circular" {
+        return "high"
+    }
+
+    "medium"
+}
+
+fn check_dependencies(deps: [Dependency]) -> [DependencyIssue] {
+    var issues: [DependencyIssue] = []
+
+    ;; 미사용 탐지
+    var unused: [Dependency] = classify_unused(deps, 1)
+    var i: i32 = 0
+    while i < length(unused) {
+        var issue = DependencyIssue {
+            dep_name: unused[i].name,
+            issue_type: "unused",
+            impact: "high",
+            auto_removable: calculate_removal_safety(unused[i])
+        }
+        issues = append(issues, issue)
+        i = i + 1
+    }
+
+    ;; 중복 탐지
+    var duplicates: [str] = classify_duplicates(deps)
+    i = 0
+    while i < length(duplicates) {
+        var issue = DependencyIssue {
+            dep_name: duplicates[i],
+            issue_type: "duplicate",
+            impact: "high",
+            auto_removable: true
+        }
+        issues = append(issues, issue)
+        i = i + 1
+    }
+
+    ;; 버전 충돌 탐지
+    var conflicts: [str] = classify_conflicts(deps)
+    i = 0
+    while i < length(conflicts) {
+        var issue = DependencyIssue {
+            dep_name: conflicts[i],
+            issue_type: "conflict",
+            impact: "high",
+            auto_removable: false
+        }
+        issues = append(issues, issue)
+        i = i + 1
+    }
+
+    issues
+}
+
+fn main() {
+    println("✅ Dependency-Checker Checker 로드 완료")
+}

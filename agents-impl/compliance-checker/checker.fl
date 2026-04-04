@@ -1,0 +1,107 @@
+// Compliance Checker — 체커
+// CLAUDE.md 표준 대비 준수 여부 확인
+
+fn check_all_rules(code: str) -> [bool] {
+    var results: [bool] = []
+
+    ;; 각 규칙별 체크
+    results = append(results, contains(code, "import validation"))
+    results = append(results, contains(code, "error_handling") || contains(code, "match"))
+    results = append(results, contains(code, "bcrypt"))
+    results = append(results, contains(code, "jwt"))
+    results = append(results, contains(code, "fn test_"))
+    results = append(results, contains(code, "///"))
+
+    results
+}
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        var j: i32 = 0
+        var match: bool = true
+        while j < length(pattern) {
+            if text[i + j] != pattern[j] {
+                match = false
+            }
+            j = j + 1
+        }
+        if match {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn calculate_compliance_score(passed: i32, total: i32) -> f64 {
+    if total == 0 {
+        return 0.0
+    }
+    f64(passed) / f64(total) * 100.0
+}
+
+fn get_remediation_steps(failed_rules: [str]) -> [str] {
+    var steps: [str] = []
+    var i: i32 = 0
+
+    while i < length(failed_rules) {
+        if failed_rules[i] == "R001" {
+            steps = append(steps, "1. validation.fl import 추가")
+        }
+        if failed_rules[i] == "R002" {
+            steps = append(steps, "2. error-handling-template.fl 적용")
+        }
+        if failed_rules[i] == "R003" {
+            steps = append(steps, "3. bcrypt 라이브러리 도입")
+        }
+        if failed_rules[i] == "R004" {
+            steps = append(steps, "4. JWT 인증 구현")
+        }
+        if failed_rules[i] == "R005" {
+            steps = append(steps, "5. 단위 테스트 작성 (fn test_)")
+        }
+        if failed_rules[i] == "R006" {
+            steps = append(steps, "6. README.md 작성")
+        }
+        i = i + 1
+    }
+
+    steps
+}
+
+fn prioritize_fixes(items: [str]) -> [str] {
+    ;; CRITICAL 먼저, HIGH, MEDIUM 순
+    ;; 여기서는 단순 정렬
+    items
+}
+
+fn estimate_effort_hours(failed_count: i32) -> i32 {
+    ;; 규칙당 평균 0.5시간 (30분)
+    var base: i32 = failed_count / 2
+    if base == 0 {
+        base = 1
+    }
+    base
+}
+
+fn generate_fix_roadmap(score: f64, failed: i32) -> str {
+    var roadmap: str = ""
+
+    if score < 50.0 {
+        roadmap = roadmap + "긴급 조치 필요 (목표: 2주)\n"
+    } else if score < 80.0 {
+        roadmap = roadmap + "개선 권장 (목표: 3주)\n"
+    } else {
+        roadmap = roadmap + "유지보수 (모니터링)\n"
+    }
+
+    var hours: i32 = estimate_effort_hours(failed)
+    roadmap = roadmap + "예상 소요 시간: " + str(hours) + "시간\n"
+
+    roadmap
+}
+
+fn main() {
+    println("✅ Compliance-Checker Checker 로드 완료")
+}
