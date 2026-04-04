@@ -1,0 +1,310 @@
+// 에이전트 레지스트리
+// 54개 에이전트 메타정보 등록 및 관리
+
+// ==================== 구조체 정의 ====================
+
+struct AgentMeta {
+    id: str
+    name: str
+    category: str              // dev | ops | deploy | learn
+    inputs: [str]              // 입력 타입
+    outputs: [str]             // 출력 타입
+    dependencies: [str]        // 선행 에이전트 ID
+    execution_time_ms: i32
+    confidence: f64            // 신뢰도 (0.85~0.95)
+    description: str
+}
+
+struct AgentRegistry {
+    agents: [AgentMeta]
+    total_count: i32
+}
+
+// ==================== 레지스트리 초기화 ====================
+
+fn registry_new() -> AgentRegistry {
+    var registry = AgentRegistry {
+        agents: [],
+        total_count: 0
+    }
+    registry
+}
+
+fn register_agent(registry: AgentRegistry, meta: AgentMeta) -> AgentRegistry {
+    registry.agents.push(meta)
+    registry.total_count = registry.total_count + 1
+    registry
+}
+
+// ==================== Phase 2 에이전트 (5개) ====================
+
+fn register_phase2_agents(registry: AgentRegistry) -> AgentRegistry {
+    ;; 1. SQL-Optimizer
+    var sql_opt = AgentMeta {
+        id: "sql-optimizer",
+        name: "SQL-Optimizer",
+        category: "dev",
+        inputs: ["sql_code"],
+        outputs: ["optimization_result"],
+        dependencies: [],
+        execution_time_ms: 800,
+        confidence: 0.92,
+        description: "DB 쿼리 최적화"
+    }
+    registry = register_agent(registry, sql_opt)
+
+    ;; 2. Security-Scanner
+    var sec_scan = AgentMeta {
+        id: "security-scanner",
+        name: "Security-Scanner",
+        category: "dev",
+        inputs: ["code"],
+        outputs: ["vulnerability_list"],
+        dependencies: ["code-analyzer"],
+        execution_time_ms: 800,
+        confidence: 0.92,
+        description: "보안 취약점 탐지"
+    }
+    registry = register_agent(registry, sec_scan)
+
+    ;; 3. Document-Generator
+    var doc_gen = AgentMeta {
+        id: "document-generator",
+        name: "Document-Generator",
+        category: "learn",
+        inputs: ["code"],
+        outputs: ["documentation"],
+        dependencies: ["code-analyzer"],
+        execution_time_ms: 1200,
+        confidence: 0.95,
+        description: "자동 문서 생성"
+    }
+    registry = register_agent(registry, doc_gen)
+
+    ;; 4. Log-Analyzer
+    var log_ana = AgentMeta {
+        id: "log-analyzer",
+        name: "Log-Analyzer",
+        category: "ops",
+        inputs: ["logs"],
+        outputs: ["error_classification"],
+        dependencies: [],
+        execution_time_ms: 2000,
+        confidence: 0.92,
+        description: "로그 분석 및 분류"
+    }
+    registry = register_agent(registry, log_ana)
+
+    ;; 5. Performance-Profiler
+    var perf_prof = AgentMeta {
+        id: "performance-profiler",
+        name: "Performance-Profiler",
+        category: "ops",
+        inputs: ["code"],
+        outputs: ["performance_metrics"],
+        dependencies: ["code-analyzer"],
+        execution_time_ms: 1500,
+        confidence: 0.88,
+        description: "성능 병목 식별"
+    }
+    registry = register_agent(registry, perf_prof)
+
+    registry
+}
+
+// ==================== Phase 3 에이전트 (1개 + 예정) ====================
+
+fn register_phase3_agents(registry: AgentRegistry) -> AgentRegistry {
+    ;; Code-Analyzer
+    var code_ana = AgentMeta {
+        id: "code-analyzer",
+        name: "Code-Analyzer",
+        category: "dev",
+        inputs: ["code"],
+        outputs: ["code_metrics"],
+        dependencies: [],
+        execution_time_ms: 1200,
+        confidence: 0.90,
+        description: "코드 품질 분석"
+    }
+    registry = register_agent(registry, code_ana)
+
+    registry
+}
+
+// ==================== 조회 함수 ====================
+
+fn get_agent(registry: AgentRegistry, id: str) -> AgentMeta {
+    var i: i32 = 0
+    while i < length(registry.agents) {
+        if registry.agents[i].id == id {
+            return registry.agents[i]
+        }
+        i = i + 1
+    }
+
+    ;; 기본값 (찾지 못한 경우)
+    var default_agent = AgentMeta {
+        id: "unknown",
+        name: "Unknown",
+        category: "dev",
+        inputs: [],
+        outputs: [],
+        dependencies: [],
+        execution_time_ms: 0,
+        confidence: 0.0,
+        description: ""
+    }
+    default_agent
+}
+
+fn find_agents_by_category(registry: AgentRegistry, category: str) -> [AgentMeta] {
+    var results: [AgentMeta] = []
+    var i: i32 = 0
+    while i < length(registry.agents) {
+        if registry.agents[i].category == category {
+            results.push(registry.agents[i])
+        }
+        i = i + 1
+    }
+    results
+}
+
+fn find_agents_by_input(registry: AgentRegistry, input_type: str) -> [AgentMeta] {
+    var results: [AgentMeta] = []
+    var i: i32 = 0
+    while i < length(registry.agents) {
+        var agent = registry.agents[i]
+        var j: i32 = 0
+        while j < length(agent.inputs) {
+            if agent.inputs[j] == input_type {
+                results.push(agent)
+                break
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+    results
+}
+
+// ==================== 의존성 그래프 ====================
+
+fn build_dependency_graph(registry: AgentRegistry) -> str {
+    var graph: str = ""
+    graph = graph + "## Agent Dependency Graph\n\n"
+
+    var i: i32 = 0
+    while i < length(registry.agents) {
+        var agent = registry.agents[i]
+        graph = graph + "### " + agent.name + "\n"
+
+        if length(agent.dependencies) == 0 {
+            graph = graph + "- No dependencies (입력: 독립적)\n"
+        } else {
+            graph = graph + "- Depends on: "
+            var j: i32 = 0
+            while j < length(agent.dependencies) {
+                graph = graph + agent.dependencies[j] + " "
+                j = j + 1
+            }
+            graph = graph + "\n"
+        }
+
+        graph = graph + "- Execution time: " + str(agent.execution_time_ms) + "ms\n\n"
+        i = i + 1
+    }
+
+    graph
+}
+
+// ==================== 레지스트리 통계 ====================
+
+fn registry_stats(registry: AgentRegistry) -> str {
+    var stats: str = ""
+    stats = stats + "# Agent Registry Statistics\n\n"
+
+    stats = stats + "## Total Agents: " + str(registry.total_count) + "\n\n"
+
+    ;; 카테고리별
+    var dev_agents = find_agents_by_category(registry, "dev")
+    var ops_agents = find_agents_by_category(registry, "ops")
+    var deploy_agents = find_agents_by_category(registry, "deploy")
+    var learn_agents = find_agents_by_category(registry, "learn")
+
+    stats = stats + "## By Category\n"
+    stats = stats + "- Dev: " + str(length(dev_agents)) + "\n"
+    stats = stats + "- Ops: " + str(length(ops_agents)) + "\n"
+    stats = stats + "- Deploy: " + str(length(deploy_agents)) + "\n"
+    stats = stats + "- Learn: " + str(length(learn_agents)) + "\n\n"
+
+    ;; 평균 실행시간
+    var total_time: i32 = 0
+    var i: i32 = 0
+    while i < length(registry.agents) {
+        total_time = total_time + registry.agents[i].execution_time_ms
+        i = i + 1
+    }
+
+    var avg_time: i32 = 0
+    if registry.total_count > 0 {
+        avg_time = total_time / registry.total_count
+    }
+
+    stats = stats + "## Performance\n"
+    stats = stats + "- Total execution time (sequential): " + str(total_time) + "ms\n"
+    stats = stats + "- Avg execution time: " + str(avg_time) + "ms\n"
+    stats = stats + "- Potential parallel time: ~3000ms (with optimization)\n"
+
+    stats
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║    Agent Registry — 에이전트 관리        ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 레지스트리 초기화
+    println("1️⃣ 레지스트리 초기화")
+    var registry = registry_new()
+    registry = register_phase2_agents(registry)
+    registry = register_phase3_agents(registry)
+    println("등록된 에이전트: " + str(registry.total_count) + "개")
+    println("")
+
+    ;; 2. 에이전트 조회
+    println("2️⃣ 에이전트 조회")
+    var code_analyzer = get_agent(registry, "code-analyzer")
+    println("Agent: " + code_analyzer.name)
+    println("Confidence: " + str(code_analyzer.confidence * 100.0) + "%")
+    println("Dependencies: " + str(length(code_analyzer.dependencies)))
+    println("")
+
+    ;; 3. 카테고리별 조회
+    println("3️⃣ 카테고리별 에이전트")
+    var dev_agents = find_agents_by_category(registry, "dev")
+    println("Dev 에이전트: " + str(length(dev_agents)) + "개")
+    var i: i32 = 0
+    while i < length(dev_agents) {
+        println("  - " + dev_agents[i].name)
+        i = i + 1
+    }
+    println("")
+
+    ;; 4. 의존성 그래프
+    println("4️⃣ 의존성 그래프")
+    var graph = build_dependency_graph(registry)
+    println(substring(graph, 0, 200) + "...")
+    println("")
+
+    ;; 5. 통계
+    println("5️⃣ 레지스트리 통계")
+    var stats = registry_stats(registry)
+    println(substring(stats, 0, 250) + "...")
+    println("")
+
+    println("✅ 에이전트 레지스트리 로드 완료")
+}
