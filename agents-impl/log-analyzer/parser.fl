@@ -54,6 +54,13 @@ fn trim_left(text: str) -> str {
     substring(text, i, length(text))
 }
 
+// ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+fn validate_input(logs: str) -> bool {
+    if length(logs) == 0 { return false }
+    if length(logs) > 1000000 { return false }
+    return true
+}
+
 // ==================== 로그 파싱 함수 ====================
 
 fn parse_log_line(line: str, line_num: i32) -> LogEntry {
@@ -107,6 +114,21 @@ fn parse_log_line(line: str, line_num: i32) -> LogEntry {
 }
 
 fn parse_logs(log_content: str, filename: str) -> ParseResult {
+    if !validate_input(log_content) {
+        var empty_result = ParseResult {
+            filename: filename,
+            total_lines: 0,
+            parsed_entries: 0,
+            error_count: 0,
+            warning_count: 0,
+            info_count: 0,
+            debug_count: 0,
+            entries: [],
+            parse_time_ms: 0
+        }
+        return empty_result
+    }
+
     var result = ParseResult {
         filename: filename,
         total_lines: 0,

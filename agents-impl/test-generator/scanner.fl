@@ -18,7 +18,25 @@ struct ScanResult {
     test_cases: [TestCase]
 }
 
+// ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+fn validate_input(code: str) -> bool {
+    if length(code) == 0 { return false }
+    if length(code) > 1000000 { return false }
+    return true
+}
+
 fn scan_code(code: str, filename: str) -> ScanResult {
+    if !validate_input(code) {
+        var empty_result = ScanResult {
+            target_file: filename,
+            functions_found: 0,
+            test_cases_generated: 0,
+            coverage_percentage: 0.0,
+            test_cases: []
+        }
+        return empty_result
+    }
+
     var result = ScanResult {
         target_file: filename,
         functions_found: 0,

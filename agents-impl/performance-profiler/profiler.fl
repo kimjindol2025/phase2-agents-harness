@@ -49,6 +49,13 @@ fn index_of(text: str, pattern: str) -> i32 {
     -1
 }
 
+// ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+fn validate_input(code: str) -> bool {
+    if length(code) == 0 { return false }
+    if length(code) > 1000000 { return false }
+    return true
+}
+
 // ==================== 프로파일링 함수 ====================
 
 fn profile_function(func_name: str, call_count: i32, avg_time: f64) -> FunctionMetric {
@@ -66,6 +73,21 @@ fn profile_function(func_name: str, call_count: i32, avg_time: f64) -> FunctionM
 }
 
 fn profile_code(code: str, profile_id: str) -> ProfileData {
+    if !validate_input(code) {
+        var empty_data = ProfileData {
+            profile_id: profile_id,
+            timestamp: "2026-04-04T10:30:00Z",
+            target_code: "",
+            duration_ms: 0.0,
+            functions: [],
+            total_memory_mb: 0,
+            cpu_usage_percent: 0.0,
+            gc_time_ms: 0.0,
+            hotspot_count: 0
+        }
+        return empty_data
+    }
+
     var data = ProfileData {
         profile_id: profile_id,
         timestamp: "2026-04-04T10:30:00Z",

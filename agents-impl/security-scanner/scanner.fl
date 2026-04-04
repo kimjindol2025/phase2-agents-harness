@@ -30,6 +30,40 @@ struct ScanResult {
     overall_severity: str
 }
 
+// ==================== 입력 검증 ====================
+
+fn validate_input(code: str) -> bool {
+    ;; 길이 검증
+    var code_len: i32 = length(code)
+    if code_len == 0 {
+        return false  ;; 빈 입력 거부
+    }
+    if code_len > 1000000 {
+        return false  ;; 1MB 초과 거부 (스택 오버플로우 방지)
+    }
+
+    ;; 형식 검증 (기본 문자 범위)
+    var i: i32 = 0
+    while i < code_len {
+        var char = substring(code, i, i + 1)
+        ;; printable ASCII + 개행 + 탭 허용
+        var is_valid: bool = false
+
+        if char == "\n" || char == "\t" || char == "\r" {
+            is_valid = true
+        } else if (char >= " " && char <= "~") {
+            is_valid = true
+        }
+
+        if !is_valid {
+            return false  ;; 제어 문자 거부
+        }
+        i = i + 1
+    }
+
+    return true
+}
+
 // ==================== 헬퍼 함수 ====================
 
 fn index_of(text: str, pattern: str) -> i32 {
@@ -318,6 +352,19 @@ fn detect_information_disclosure(code: str) -> [Vulnerability] {
 // ==================== 스캔 실행 ====================
 
 fn scan_code(target: ScanTarget) -> ScanResult {
+    ;; ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+    if !validate_input(target.code) {
+        var empty_result = ScanResult {
+            target: target,
+            vulnerabilities: [],
+            scan_duration_ms: 0,
+            owasp_coverage: 0.0,
+            false_positive_rate: 0.0,
+            overall_severity: "none"
+        }
+        return empty_result  ;; 유효하지 않은 입력 조기 반환
+    }
+
     var result = ScanResult {
         target: target,
         vulnerabilities: [],

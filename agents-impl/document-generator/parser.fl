@@ -40,9 +40,29 @@ fn contains(text: str, pattern: str) -> bool {
     index_of(text, pattern) >= 0
 }
 
+// ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+fn validate_input(code: str) -> bool {
+    if length(code) == 0 { return false }
+    if length(code) > 1000000 { return false }
+    return true
+}
+
 // ==================== 파싱 함수 ====================
 
 fn parse_code(code: str, filename: str, language: str) -> ParseResult {
+    if !validate_input(code) {
+        var empty_result = ParseResult {
+            filename: filename,
+            language: language,
+            total_lines: 0,
+            functions: [],
+            structs: [],
+            total_elements: 0,
+            parse_time_ms: 0
+        }
+        return empty_result
+    }
+
     var result = ParseResult {
         filename: filename,
         language: language,

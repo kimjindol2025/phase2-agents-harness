@@ -56,9 +56,28 @@ fn slow_query_display(query: SlowQuery) -> str {
     s
 }
 
+// ✅ 입력 검증 (보안: CRITICAL 이슈 해결)
+fn validate_input(query: str) -> bool {
+    if length(query) == 0 { return false }
+    if length(query) > 1000000 { return false }
+    return true
+}
+
 // ==================== 분석 함수 ====================
 
 fn analyze_query(q: SlowQuery) -> QueryAnalysis {
+    if !validate_input(q.sql) {
+        var empty_analysis = QueryAnalysis {
+            query: q,
+            issues: [],
+            severity: "invalid",
+            indexes_needed: [],
+            suggested_sql: "",
+            confidence: 0.0
+        }
+        return empty_analysis
+    }
+
     var analysis = QueryAnalysis {
         query: q,
         issues: [],
