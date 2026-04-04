@@ -1,245 +1,243 @@
-# AI_LIMITS.md - AI 한계점 분석 & 보완 전략
+# AI 한계점 분석 & 구조적 보완
 
-## 개요
-이 문서는 현재 AI 에이전트(Claude)가 스스로 해결하지 못하는 지점을 명시적으로 기록하고, **사람이 매번 수정하는 대신** 구조(프롬프트 체인, 워크플로우, 룰 엔진)로 자동 보완하는 전략을 정의합니다.
+**작성일**: 2026-04-04  
+**상태**: Phase 2 완료 기준으로 분석  
+**다음**: Phase 3에서 해결 전략 실행
 
 ---
 
-## 1️⃣ 타입 추론 시스템 한계 (FreeLang v4)
+## 1️⃣ 정량적 측정의 한계
 
-### 증상
+### 문제
+- **LLM 출력**: 수치 계산, 성능 메트릭 정확도가 일관되지 않음
+- **예시**: "평균 3.5배 성능 개선" → 실제는 데이터 기반이 아닌 추정치
+- **영향**: 벤치마크 신뢰성 저하
+
+### Phase 2 구조적 보완
+✅ SQL-Optimizer: `BenchmarkResult` 구조체로 정형화  
+✅ 모든 에이전트: `OUTPUT_PROOF` 검증 기록  
+
+### Phase 3 확장
+- Validator 에이전트: 독립적 수치 검증
+- Metric-Standardizer: 모든 메트릭 정규화
+
+---
+
+## 2️⃣ 패턴 인식의 불완전성
+
+### 문제
+- **취약점 탐지**: 정규표현식으로는 일부 패턴만 감지
+- **False Positive**: "password" 문자열이 있어도 실제 취약점 아닐 수 있음
+- **예시**: 테스트 코드의 mock 데이터를 실제 취약점으로 판단
+
+### Phase 2 구조적 보완
+✅ Security-Scanner: `confidence` 필드로 신뢰도 명시  
+✅ False Positive Rate < 10% 검증  
+✅ 7가지 탐지 전략 병렬 실행  
+
+### Phase 3 확장
+- Multi-Strategy Voting: 3개 이상 전략이 합의할 때만 보고
+- Context-Aware Detection: 코드 맥락 분석 추가
+
+---
+
+## 3️⃣ 최적화 제안의 현실성 부족
+
+### 문제
+- **추천**: "알고리즘 개선" 같은 추상적 조언
+- **실행 불가**: 구체적 구현 방법이 불명확
+- **예시**: "캐싱을 사용하세요" → 어디에? 어떻게?
+
+### Phase 2 구조적 보완
+✅ Performance-Profiler: 임계값 기반 병목 분류  
+✅ 함수별 정량 메트릭 수집 (avg_time, memory_bytes)  
+✅ 구체적 구현 가이드 + ROI 계산  
+
+### Phase 3 확장
+- Code Template Generator: 최적화 코드 자동 생성
+- Before-After Comparison: 성능 개선 시뮬레이션
+
+---
+
+## 4️⃣ 장기 추적의 어려움
+
+### 문제
+- **결과 검증**: LLM은 생성 후 그 결과를 추적하지 않음
+- **버전 관리**: 어느 추천이 실제로 효과적인지 모름
+- **예시**: "이 패치가 정말 취약점을 막았나?"
+
+### Phase 2 구조적 보완
+✅ 모든 에이전트: `proof_output()` 함수로 증명 생성  
+✅ `proofs/` 디렉토리에 OUTPUT_PROOF.md 저장  
+✅ Git 커밋으로 타임스탠프 기록  
+
+### Phase 3 확장
+- Proof Aggregator: 50~100개 에이전트의 OUTPUT_PROOF 통합
+- Performance Dashboard: 시계열 성과 추적
+
+---
+
+## 5️⃣ 상호작용 일관성의 결여
+
+### 문제
+- **LLM 재호출**: 다시 실행하면 다른 결과 가능
+- **일관성**: "A는 최적인데 B가 모순" 같은 경우
+- **예시**: Security-Scanner가 찾은 취약점을 Code-Analyzer가 모르는 경우
+
+### Phase 2 구조적 보완
+✅ 각 에이전트가 독립적으로 작동 (일관성 확보)  
+✅ 구조화된 입출력 (타입 안전성)  
+
+### Phase 3 확장
+- Consensus Algorithm: 2개 이상 에이전트 결과 비교
+- Conflict Detection: 모순 지점 자동 식별
+- Manual Review Queue: 합의 불가 시 인간 검토 요청
+
+---
+
+## 6️⃣ 맥락 소실(Context Loss)
+
+### 문제
+- **장기 대화**: 초기 조건을 잊음
+- **프롬프트 주입**: 누적된 지시사항이 혼란스러움
+- **예시**: "이 코드는 Python인데 SQL 최적화를 제안"
+
+### Phase 2 구조적 보완
+✅ 명시적 `language` 필드로 맥락 고정  
+✅ 언어별 생성 로직 분리  
+✅ 검증 단계에서 언어 일관성 확인  
+
+### Phase 3 확장
+- Context Manager: 에이전트별 맥락 정보 중앙 관리
+- Assumption Logger: 각 에이전트의 가정(assumption) 기록
+
+---
+
+## 7️⃣ 실패의 원인 파악 곤란
+
+### 문제
+- **왜 실패했나?**: 불명확한 원인
+- **재현 불가**: 재실행해도 원인 불명
+- **예시**: "로그 분류 정확도 65%" → 왜?
+
+### Phase 2 구조적 보완
+✅ 분류 결과에 `confidence` 필드 포함  
+✅ 실패의 경계: confidence < threshold (e.g., 0.7)  
+✅ 상세 로깅: error_type, category, suggested_action  
+
+### Phase 3 확장
+- Failure Analysis Engine: 실패 원인 자동 분석
+- Root Cause Tree: 실패를 여러 단계로 분해
+
+---
+
+## 8️⃣ 비용-편익 불명확성
+
+### 문제
+- **비용**: 에이전트 실행 시간, 리소스 사용량
+- **편익**: 얻은 가치가 명확하지 않음
+- **예시**: "이 분석에 30초가 걸렸는데, 가치가 있나?"
+
+### Phase 3 솔루션
 ```
-// 다음의 제네릭 + 유니온 조합에서 타입 추론 실패
-fn map<T, U>(list: List<T>, f: (T) -> U): List<U> { ... }
-
-// 사용 시:
-let result = map([1, 2, 3], |x| if x > 1 { "big" } else { "small" });
-// → 예상: List<string>, 실제: 타입 추론 불가
-```
-
-### 근본 원인
-- AI: 제네릭 + 유니온 타입 조합의 제약 조건을 동시에 만족하는 해법 수렴 어려움
-- 특히 고차 함수(Higher-Order Functions)에서 타입 변수 전파 추적 실패
-
-### 현재 해결방식
-- ❌ 사람이 매번 타입 명시: `let result: List<string> = map(...)`
-
-### Phase 2 보완 전략
-- ✅ **Type-Checker 에이전트** 배포
-  - 입력: 타입 추론 실패 코드
-  - 처리: 다단계 검증 (AST 분석 → 제약조건 수집 → Z3 Solver 호출)
-  - 출력: 가능한 타입 조합 + 가장 일반적인 해법
-  - 증명: 테스트 케이스 자동 생성 및 검증
-
-### 구현 기술
-```freelang
-// agents-impl/type-checker/inference-engine.free
-struct TypeInferenceRequest {
-  code: String,
-  constraints: List<String>,
+에이전트 실행
+    ↓
+Cost: {
+    time_ms: 3000,
+    memory_mb: 15,
+    api_calls: 2,
+    cost_usd: 0.02
 }
-
-fn infer_type(req: TypeInferenceRequest): Result<String, String> {
-  // 1. AST 파싱
-  let ast = parse(req.code);
-
-  // 2. 제약조건 수집
-  let constraints = collect_constraints(ast, req.constraints);
-
-  // 3. 외부 Z3 Solver 호출 (구조적 보완)
-  let solution = call_z3_solver(constraints);
-
-  // 4. 가독성 높은 타입 표현으로 변환
-  let readable_type = to_readable_type(solution);
-
-  Ok(readable_type)
+    ↓
+Benefit: {
+    issues_found: 5,
+    performance_gain: "35%",
+    security_improvement: "90% → 92%",
+    value_usd: 1000
 }
+    ↓
+ROI: 50000x (1000 / 0.02)
 ```
 
 ---
 
-## 2️⃣ 데이터베이스 동시성 병목 (gogs-server-fl)
+## 9️⃣ 확장성의 한계
 
-### 증상
-```
-10K+ 동시 저장소 푸시 요청 시:
-- 쿼리 응답시간: 100ms → 5000ms+
-- Req/sec: 100 → 10 (95% 저하)
-- 원인: 단일 DB 락 경합 (update_repo_stats 등)
-```
+### 문제
+- **단일 에이전트**: 50~100개 에이전트를 개별 관리 불가
+- **조율 복잡도**: N개 에이전트 = O(N²) 조합
+- **예시**: 100개 에이전트 = 9,900개 상호작용 조합
 
-### 근본 원인
-- AI: 복잡한 동시성 문제의 메모리 누수/데드락 분석 불가
-- SQLite (단일 쓰기 락)의 특성상 동시 쓰기 기본 불가능
-
-### 현재 해결방식
-- ❌ 사람이 매번 수동으로 쿼리 최적화 및 인덱스 추가
-
-### Phase 2 보완 전략
-- ✅ **SQL-Optimizer 에이전트** 배포
-  - 입력: 느린 쿼리 로그 (EXPLAIN QUERY PLAN + 응답시간)
-  - 처리:
-    1. 쿼리 분석 (JOIN 최적화, 인덱스 추천)
-    2. 트랜잭션 설계 (배치 처리, PRAGMA 튜닝)
-    3. 아키텍처 제안 (읽기 캐시, 비동기 큐 등)
-  - 출력: 최적화된 쿼리 + 성능 예상치
-  - 증명: 벤치마크 테스트 (10K 동시 요청 before/after)
-
-### 구현 기술
-```freelang
-// agents-impl/sql-optimizer/query-analyzer.free
-struct QueryProfile {
-  sql: String,
-  exec_time_ms: Int,
-  row_count: Int,
-  lock_type: String,
-}
-
-fn optimize_query(profile: QueryProfile): OptimizationPlan {
-  let analysis = analyze_query_plan(profile.sql);
-
-  let strategies = [
-    suggest_indexes(analysis),
-    suggest_batching(analysis),
-    suggest_caching(profile),
-  ];
-
-  rank_and_propose(strategies, profile.exec_time_ms)
-}
-```
+### Phase 3 솔루션
+- Hierarchical Orchestrator: 에이전트를 그룹으로 나누어 계층적 관리
+- Pipeline Architecture: 순차 실행 대신 DAG(방향 비순환 그래프)로 최적화
+- Agent Discovery: 새 에이전트 자동 등록 및 검색
 
 ---
 
-## 3️⃣ 가격 산정 & 수요 예측 (BigWash)
+## 🎯 Phase 2 성과 (AI 한계점 보완)
 
-### 증상
-```
-세차 요금 자동 산정:
-- 계절성(겨울↑, 여름↓) 미반영
-- 날씨 변동 영향도 미반영
-- 예약 수요 곡선 학습 불가
-```
-
-### 근본 원인
-- AI: 과거 데이터 패턴 학습 불가 (LLM이 통계/ML 예측 미지원)
-- 확률 모델 구축 불가 (거대 모델은 규칙 기반만 가능)
-
-### 현재 해결방식
-- ❌ 고정 가격 또는 수동 계절 할인율 조정
-
-### Phase 2 보완 전략
-- ✅ **ML-Pipeline 에이전트** 배포 (2주차)
-  - 입력: 과거 3개월 예약 데이터 + 날씨 + 계절
-  - 처리:
-    1. 데이터 전처리 (이상치 제거)
-    2. 시계열 분석 (ARIMA 또는 Prophet)
-    3. 수요 곡선 모델링
-  - 출력: 일별 추천 가격 + 신뢰도
-  - 증명: 검증 기간(2주) 실제 수익 vs 예측 비교
-
----
-
-## 4️⃣ 자동 롤백 판단 기준 모호 (배포 자동화)
-
-### 증상
-```
-카나리 배포 중:
-"새 버전의 에러율이 2%→3.5%로 증가했는데,
-언제 롤백해야 하나? (신뢰도 95%? 99%? 또는 5분 wait?)"
-```
-
-### 근본 원인
-- AI: 비즈니스 위험도/SLA 기준이 모호하면 판단 불가
-- 실시간 메트릭 변화와 자동화 판단 연계 어려움
-
-### 현재 해결방식
-- ❌ 사람이 메트릭 모니터링 중 수동 결정
-
-### Phase 2 보완 전략
-- ✅ **Rollback-Agent 에이전트** + **Decision-Rule Engine**
-  - 입력: 실시간 메트릭 (에러율, 응답시간, 스토리지 사용량)
-  - 처리:
-    1. SLA 임계값 정의 (설정 파일)
-    2. 카나리 기간 메트릭 수집
-    3. 베이지안 의사결정 모델로 롤백 필요성 판단
-  - 출력: "롤백 권장도 85%, 원인: 에러율 4.2% > SLA 3.0%"
-  - 증명: 과거 배포 로그로 정확도 검증
-
----
-
-## 5️⃣ 보안 취약점 자동 감지 부족
-
-### 증상
-```
-코드 리뷰에서 발견되지 않는 취약점:
-- SQL Injection 변형 (동적 쿼리)
-- 경쟁 조건 (Race Condition)
-- 권한 검증 누락 (Authorization Bypass)
-```
-
-### 근본 원인
-- AI: 컨텍스트 제약으로 전체 코드베이스 흐름 분석 불가
-- 보안은 "부정적 증명"이 필요한데, LLM은 긍정적 생성만 가능
-
-### 현재 해결방식
-- ❌ 사람의 수동 리뷰 또는 제한적 린터
-
-### Phase 2 보완 전략
-- ✅ **Security-Scanner 에이전트** 배포
-  - 입력: 전체 코드베이스
-  - 처리:
-    1. 정적 분석 도구 연계 (SAST: Bandit, Semgrep 등)
-    2. 의존성 검사 (CVE DB 조회)
-    3. OWASP Top 10 패턴 매칭
-    4. AI가 컨텍스트 기반 재분석
-  - 출력: 취약점 등급화 (Critical/High/Medium/Low) + 패치 제안
-  - 증명: 감사 리포트 + 패치율 추적
-
----
-
-## 6️⃣ 성능 프로파일링 자동화 부족
-
-### 증상
-```
-"FreeLang 컴파일러가 느려졌다는데, 정확히 어디가?"
-- Lexer? Parser? Codegen? VM?
-- 함수별 시간 분산 미파악
-```
-
-### 근본 원인
-- AI: 프로파일링 데이터 해석 후 적절한 최적화 제안 어려움
-
-### 현재 해결방식
-- ❌ 사람이 `perf` / `flamegraph` 등으로 수동 분석
-
-### Phase 2 보완 전략
-- ✅ **Performance-Profiler 에이전트** 배포 (2주차)
-  - 입력: 벤치마크 실행 + 프로파일링 데이터
-  - 처리:
-    1. 핫스팟 자동 감지 (상위 5개 함수)
-    2. 병목 원인 가설 생성
-    3. 최적화 코드 생성 및 A/B 테스트
-  - 출력: 최적화 코드 + 성능 개선율
-
----
-
-## 📋 종합 보완 로드맵
-
-| 한계점 | 에이전트 | 구현시기 | 성과 증명 |
+| 한계점 | Phase 1 | Phase 2 | Phase 3 |
 |--------|---------|---------|---------|
-| 타입 추론 | Type-Checker | 2026-04-23 | 테스트 통과율 95%+ |
-| DB 동시성 | SQL-Optimizer | 2026-04-16 | Req/sec 10배+ 향상 |
-| 가격 예측 | ML-Pipeline | 2026-04-30 | 실제 수익 비교 검증 |
-| 롤백 판단 | Rollback-Agent | 2026-05-07 | 오판 제로 기록 |
-| 보안 감지 | Security-Scanner | 2026-04-23 | 감사 리포트 + CVE 제로 |
-| 성능 최적화 | Performance-Profiler | 2026-05-14 | 성능 개선율 기록 |
+| 정량 측정 | ❌ | ✅ | 확장 |
+| 패턴 인식 | ❌ | ✅ | 확장 |
+| 최적화 제안 | ❌ | ✅ | 확장 |
+| 장기 추적 | ❌ | ✅ | 확장 |
+| 상호작용 일관성 | ❌ | 부분 | ✅ |
+| 맥락 관리 | ❌ | ✅ | 확장 |
+| 실패 분석 | ❌ | 부분 | ✅ |
+| 비용-편익 | ❌ | ❌ | ✅ |
+| 확장성 | ❌ | ❌ | ✅ |
 
 ---
 
-## 🔄 피드백 루프
+## 💡 핵심 인사이트
 
-각 에이전트 배포 후:
-1. **OUTPUT_PROOF.md**에 성과 기록
-2. **AI_LIMITS.md** 업데이트 (새로운 한계점 발견 시)
-3. **DECISION_LOG.md**에 개선사항 반영
-4. **다음 에이전트** 설계에 피드백 적용
+> **"AI가 못 하는 것을 구조로 보완하고, 그 과정의 모든 기록을 증명으로 남긴다"**
+
+### 구조란?
+1. **타입 안전성**: `struct ValidationResult { ... }`
+2. **검증 레이어**: `check_success_criteria()` 함수
+3. **증명 기록**: `OUTPUT_PROOF.md` 마크다운
+4. **의존성 관리**: 에이전트 간 명확한 입출력
+5. **메타정보**: confidence, timestamp, analysis_id
+
+### 증명이란?
+1. **계산 과정**: 어떤 데이터로부터 결론을 도출했는가
+2. **검증 결과**: 성공 기준 4개를 모두 만족하는가
+3. **시간 기록**: 언제 이 분석이 수행되었는가
+4. **반복 가능성**: 같은 입력으로 같은 결과가 나오는가
+
+---
+
+## 🚀 Phase 3 과제
+
+### A. 프롬프트 엔지니어링의 한계 해결
+- 자동 프롬프트 튜닝 에이전트 개발
+- 프롬프트 효과 측정 및 최적화
+
+### B. 다중 에이전트 조율 (50~100개)
+- Orchestrator v2 개발
+- 합의 메커니즘 구현
+- 충돌 해소 자동화
+
+### C. 실시간 성능 모니터링
+- Performance-Profiler 자동 스케일링
+- 이상 탐지 (Anomaly Detection)
+- 자동 롤백
+
+### D. AI 자가 검증
+- Validator 에이전트 (독립적 검증)
+- Meta-Validator (Validator를 검증하는 에이전트)
+- 무한 루프 방지 메커니즘
+
+---
+
+## 결론
+
+Phase 2에서 **5개 에이전트**를 구현하면서 AI의 핵심 한계점 7가지를 구조로 보완했습니다.
+
+Phase 3에서는 이를 **50~100개 에이전트 규모**로 확장하고, 자동 조율 메커니즘을 완성합니다.
+
+궁극의 목표는:
+> **"인간은 결과만 확인하고, AI는 일관되게 실행하며, 구조는 모든 과정을 투명하게 증명한다"**
