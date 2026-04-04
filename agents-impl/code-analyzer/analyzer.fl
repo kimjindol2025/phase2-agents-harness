@@ -1,0 +1,299 @@
+// Code-Analyzer 에이전트 — 코드 분석기
+// 복잡도 분석 및 품질 평가
+
+// ==================== 구조체 정의 ====================
+
+struct QualityMetrics {
+    maintainability_index: i32
+    code_smell_score: f64
+    technical_debt: f64
+    duplicate_lines_percent: f64
+}
+
+struct CodeAnalysis {
+    analysis_id: str
+    filename: str
+    language: str
+
+    structure: {
+        lines_of_code: i32
+        functions: i32
+        classes: i32
+    }
+
+    complexity: {
+        cyclomatic: i32
+        cognitive: i32
+        nesting_depth: i32
+    }
+
+    quality: QualityMetrics
+
+    issues: {
+        critical: i32
+        high: i32
+        medium: i32
+        low: i32
+    }
+
+    recommendations: [str]
+    analysis_time_ms: i32
+}
+
+// ==================== 분석 함수 ====================
+
+fn calculate_maintainability_index(loc: i32, cyclomatic: i32, cognitive: i32) -> i32 {
+    ;; 간단한 계산: (171 - 5.2*log(Halstead) - 0.23*CC - 16.2*log(LOC)) * 100 / 171
+    ;; 단순화된 버전: 기본 100에서 복잡도에 따라 감점
+    var index: i32 = 100
+
+    ;; LOC 기반 감점
+    if loc > 500 {
+        index = index - 15
+    } else if loc > 300 {
+        index = index - 10
+    } else if loc > 200 {
+        index = index - 5
+    }
+
+    ;; 순환 복잡도 기반 감점
+    if cyclomatic > 15 {
+        index = index - 20
+    } else if cyclomatic > 10 {
+        index = index - 15
+    } else if cyclomatic > 5 {
+        index = index - 10
+    }
+
+    ;; 인지 복잡도 기반 감점
+    if cognitive > 20 {
+        index = index - 15
+    } else if cognitive > 15 {
+        index = index - 10
+    }
+
+    if index < 0 {
+        index = 0
+    }
+    if index > 100 {
+        index = 100
+    }
+
+    index
+}
+
+fn analyze_code(loc: i32, cyclomatic: i32, cognitive: i32, nesting: i32, issues_count: i32) -> CodeAnalysis {
+    var analysis = CodeAnalysis {
+        analysis_id: "analysis-2026-04-04",
+        filename: "code.fl",
+        language: "freeling",
+
+        structure: {
+            lines_of_code: loc,
+            functions: loc / 50,
+            classes: loc / 200
+        },
+
+        complexity: {
+            cyclomatic: cyclomatic,
+            cognitive: cognitive,
+            nesting_depth: nesting
+        },
+
+        quality: {
+            maintainability_index: 0,
+            code_smell_score: 0.0,
+            technical_debt: 0.0,
+            duplicate_lines_percent: 0.0
+        },
+
+        issues: {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0
+        },
+
+        recommendations: [],
+        analysis_time_ms: 150
+    }
+
+    ;; 유지보수성 지수 계산
+    analysis.quality.maintainability_index = calculate_maintainability_index(loc, cyclomatic, cognitive)
+
+    ;; 코드 냄새 점수 (0.0~1.0)
+    var smell: f64 = 0.0
+    if cyclomatic > 10 {
+        smell = smell + 0.2
+    }
+    if nesting > 4 {
+        smell = smell + 0.15
+    }
+    if loc > 500 {
+        smell = smell + 0.15
+    }
+    if issues_count > 5 {
+        smell = smell + 0.2
+    }
+    if smell > 1.0 {
+        smell = 1.0
+    }
+    analysis.quality.code_smell_score = smell
+
+    ;; 기술 부채 (시간으로 표현, 시간)
+    var debt: f64 = 0.0
+    if analysis.quality.maintainability_index < 50 {
+        debt = debt + 5.0
+    } else if analysis.quality.maintainability_index < 65 {
+        debt = debt + 3.0
+    } else if analysis.quality.maintainability_index < 80 {
+        debt = debt + 1.0
+    }
+
+    if cyclomatic > 15 {
+        debt = debt + 4.0
+    } else if cyclomatic > 10 {
+        debt = debt + 2.0
+    }
+
+    analysis.quality.technical_debt = debt
+
+    ;; 이슈 분류
+    if cyclomatic > 15 {
+        analysis.issues.critical = analysis.issues.critical + 1
+    } else if cyclomatic > 10 {
+        analysis.issues.high = analysis.issues.high + 1
+    }
+
+    if nesting > 5 {
+        analysis.issues.high = analysis.issues.high + 1
+    } else if nesting > 4 {
+        analysis.issues.medium = analysis.issues.medium + 1
+    }
+
+    if loc > 500 {
+        analysis.issues.medium = analysis.issues.medium + 1
+    }
+
+    analysis.issues.low = issues_count - analysis.issues.critical - analysis.issues.high - analysis.issues.medium
+    if analysis.issues.low < 0 {
+        analysis.issues.low = 0
+    }
+
+    ;; 추천사항
+    if cyclomatic > 10 {
+        analysis.recommendations.push("함수 분할: 순환 복잡도 " + str(cyclomatic) + " (권장: < 10)")
+    }
+
+    if nesting > 4 {
+        analysis.recommendations.push("중첩 감소: 깊이 " + str(nesting) + " (권장: <= 4)")
+    }
+
+    if loc > 500 {
+        analysis.recommendations.push("함수 크기 감소: " + str(loc) + " LOC (권장: < 300)")
+    }
+
+    if analysis.quality.maintainability_index < 65 {
+        analysis.recommendations.push("리팩토링 우선: 유지보수성 지수 " + str(analysis.quality.maintainability_index))
+    }
+
+    if analysis.quality.code_smell_score > 0.6 {
+        analysis.recommendations.push("코드 냄새 높음: 구조 검토 필요")
+    }
+
+    analysis
+}
+
+// ==================== 리포트 ====================
+
+fn analysis_report(analyses: [CodeAnalysis]) -> str {
+    var report: str = ""
+    report = report + "# Code Quality Analysis\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Files: " + str(length(analyses)) + "\n"
+
+    var avg_maintainability: i32 = 0
+    var total_debt: f64 = 0.0
+    var total_issues: i32 = 0
+
+    var i: i32 = 0
+    while i < length(analyses) {
+        avg_maintainability = avg_maintainability + analyses[i].quality.maintainability_index
+        total_debt = total_debt + analyses[i].quality.technical_debt
+        total_issues = total_issues + analyses[i].issues.critical + analyses[i].issues.high
+        i = i + 1
+    }
+
+    if length(analyses) > 0 {
+        avg_maintainability = avg_maintainability / length(analyses)
+    }
+
+    report = report + "- Avg maintainability: " + str(avg_maintainability) + "/100\n"
+    report = report + "- Total technical debt: " + str(total_debt) + " hours\n"
+    report = report + "- Critical/High issues: " + str(total_issues) + "\n\n"
+
+    report = report + "## Files\n"
+    i = 0
+    while i < length(analyses) {
+        var a = analyses[i]
+        report = report + "### " + a.filename + "\n"
+        report = report + "- Language: " + a.language + "\n"
+        report = report + "- LOC: " + str(a.structure.lines_of_code) + "\n"
+        report = report + "- Complexity: CC=" + str(a.complexity.cyclomatic) + "\n"
+        report = report + "- Quality: " + str(a.quality.maintainability_index) + "/100\n\n"
+        i = i + 1
+    }
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║   Code-Analyzer — 분석기                ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 분석 실행
+    println("1️⃣ 코드 분석")
+    var analysis = analyze_code(350, 8, 12, 3, 4)
+    println("파일: " + analysis.filename)
+    println("LOC: " + str(analysis.structure.lines_of_code))
+    println("순환 복잡도: " + str(analysis.complexity.cyclomatic))
+    println("유지보수성: " + str(analysis.quality.maintainability_index) + "/100")
+    println("")
+
+    ;; 2. 품질 메트릭
+    println("2️⃣ 품질 메트릭")
+    println("- 코드 냄새: " + str(analysis.quality.code_smell_score * 100.0) + "%")
+    println("- 기술 부채: " + str(analysis.quality.technical_debt) + " 시간")
+    println("- 복제 코드: " + str(analysis.quality.duplicate_lines_percent) + "%")
+    println("")
+
+    ;; 3. 이슈
+    println("3️⃣ 이슈 분류")
+    println("- Critical: " + str(analysis.issues.critical))
+    println("- High: " + str(analysis.issues.high))
+    println("- Medium: " + str(analysis.issues.medium))
+    println("- Low: " + str(analysis.issues.low))
+    println("")
+
+    ;; 4. 추천
+    println("4️⃣ 개선 제안")
+    var i: i32 = 0
+    while i < length(analysis.recommendations) {
+        println("  - " + analysis.recommendations[i])
+        i = i + 1
+    }
+    println("")
+
+    ;; 5. 리포트
+    println("5️⃣ 분석 리포트")
+    var analyses: [CodeAnalysis] = [analysis]
+    var report = analysis_report(analyses)
+    println(substring(report, 0, 250) + "...")
+    println("")
+
+    println("✅ 코드 분석기 로드 완료")
+}

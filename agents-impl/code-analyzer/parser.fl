@@ -1,0 +1,302 @@
+// Code-Analyzer 에이전트 — 코드 파서
+// 코드 구조 분석 및 메트릭 추출
+
+// ==================== 구조체 정의 ====================
+
+struct CodeMetrics {
+    lines_of_code: i32
+    classes: i32
+    functions: i32
+    duplicates: i32
+    complexity_cyclomatic: i32
+    complexity_cognitive: i32
+    nesting_depth: i32
+}
+
+struct Issue {
+    type: str
+    severity: str
+    line_number: i32
+    description: str
+    confidence: f64
+}
+
+struct ParseResult {
+    filename: str
+    language: str
+    total_lines: i32
+    metrics: CodeMetrics
+    issues: [Issue]
+    parse_time_ms: i32
+}
+
+// ==================== 헬퍼 함수 ====================
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn count_occurrences(text: str, pattern: str) -> i32 {
+    var count: i32 = 0
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            count = count + 1
+            i = i + length(pattern)
+        } else {
+            i = i + 1
+        }
+    }
+    count
+}
+
+// ==================== 파싱 함수 ====================
+
+fn parse_code(code: str, filename: str, language: str) -> ParseResult {
+    var result = ParseResult {
+        filename: filename,
+        language: language,
+        total_lines: 0,
+        metrics: CodeMetrics {
+            lines_of_code: 0,
+            classes: 0,
+            functions: 0,
+            duplicates: 0,
+            complexity_cyclomatic: 0,
+            complexity_cognitive: 0,
+            nesting_depth: 0
+        },
+        issues: [],
+        parse_time_ms: 150
+    }
+
+    ;; 라인 수 계산
+    var line_count: i32 = 1
+    var i: i32 = 0
+    while i < length(code) {
+        if substring(code, i, i + 1) == "\n" {
+            line_count = line_count + 1
+        }
+        i = i + 1
+    }
+    result.total_lines = line_count
+    result.metrics.lines_of_code = line_count
+
+    ;; 함수 개수 계산
+    if language == "python" || language == "go" || language == "freeling" {
+        result.metrics.functions = count_occurrences(code, "fn ")
+    } else if language == "javascript" || language == "typescript" {
+        result.metrics.functions = count_occurrences(code, "function ") + count_occurrences(code, "const ")
+    } else if language == "java" || language == "cpp" {
+        result.metrics.functions = count_occurrences(code, "public ") + count_occurrences(code, "private ")
+    }
+
+    ;; 클래스 개수 계산
+    if language == "python" {
+        result.metrics.classes = count_occurrences(code, "class ")
+    } else if language == "javascript" {
+        result.metrics.classes = count_occurrences(code, "class ")
+    } else if language == "java" || language == "cpp" {
+        result.metrics.classes = count_occurrences(code, "class ") + count_occurrences(code, "struct ")
+    }
+
+    ;; 순환 복잡도 추정 (if/else/for/while 개수)
+    var cyclomatic: i32 = 1
+    cyclomatic = cyclomatic + count_occurrences(code, "if ")
+    cyclomatic = cyclomatic + count_occurrences(code, "else if ")
+    cyclomatic = cyclomatic + count_occurrences(code, "for ")
+    cyclomatic = cyclomatic + count_occurrences(code, "while ")
+    cyclomatic = cyclomatic + count_occurrences(code, "case ")
+
+    if cyclomatic < 1 {
+        cyclomatic = 1
+    }
+    result.metrics.complexity_cyclomatic = cyclomatic
+
+    ;; 인지 복잡도 (중첩 레벨 기반)
+    var max_nesting: i32 = 0
+    var current_nesting: i32 = 0
+    i = 0
+    while i < length(code) {
+        var c = substring(code, i, i + 1)
+        if c == "{" || c == "(" {
+            current_nesting = current_nesting + 1
+            if current_nesting > max_nesting {
+                max_nesting = current_nesting
+            }
+        } else if c == "}" || c == ")" {
+            current_nesting = current_nesting - 1
+            if current_nesting < 0 {
+                current_nesting = 0
+            }
+        }
+        i = i + 1
+    }
+    result.metrics.nesting_depth = max_nesting
+    result.metrics.complexity_cognitive = cyclomatic + max_nesting
+
+    ;; 중복 코드 탐지 (간단한 휴리스틱)
+    var line_hashes: [str] = []
+    i = 0
+    var dup_count: i32 = 0
+    while i < line_count {
+        if i > 0 && i < line_count - 1 {
+            ;; 간단한 중복 검사 (실제로는 more sophisticated algorithm 필요)
+            dup_count = count_occurrences(code, "return")
+        }
+        i = i + 1
+    }
+    result.metrics.duplicates = dup_count / 5
+
+    ;; 이슈 탐지
+    ;; 1. 높은 복잡도
+    if cyclomatic > 10 {
+        var issue = Issue {
+            type: "HIGH_COMPLEXITY",
+            severity: "high",
+            line_number: 0,
+            description: "순환 복잡도 " + str(cyclomatic) + " (권장: < 10)",
+            confidence: 0.95
+        }
+        result.issues.push(issue)
+    }
+
+    ;; 2. 깊은 중첩
+    if max_nesting > 4 {
+        var issue = Issue {
+            type: "DEEP_NESTING",
+            severity: "medium",
+            line_number: 0,
+            description: "중첩 깊이 " + str(max_nesting) + " (권장: <= 4)",
+            confidence: 0.90
+        }
+        result.issues.push(issue)
+    }
+
+    ;; 3. 큰 함수
+    if result.metrics.lines_of_code > 500 {
+        var issue = Issue {
+            type: "LARGE_FUNCTION",
+            severity: "medium",
+            line_number: 0,
+            description: "코드 크기 " + str(result.metrics.lines_of_code) + " LOC (권장: < 500)",
+            confidence: 0.88
+        }
+        result.issues.push(issue)
+    }
+
+    ;; 4. 많은 매개변수
+    if contains(code, ", ") {
+        var param_count = count_occurrences(code, ", ")
+        if param_count > 5 {
+            var issue = Issue {
+                type: "MANY_PARAMETERS",
+                severity: "low",
+                line_number: 0,
+                description: "매개변수 개수 많음 (" + str(param_count) + "개)",
+                confidence: 0.85
+            }
+            result.issues.push(issue)
+        }
+    }
+
+    result
+}
+
+// ==================== 리포트 ====================
+
+fn parse_report(results: [ParseResult]) -> str {
+    var report: str = ""
+    report = report + "# Code Analysis Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Files analyzed: " + str(length(results)) + "\n"
+
+    var total_loc: i32 = 0
+    var total_issues: i32 = 0
+    var avg_complexity: i32 = 0
+
+    var i: i32 = 0
+    while i < length(results) {
+        total_loc = total_loc + results[i].metrics.lines_of_code
+        total_issues = total_issues + length(results[i].issues)
+        avg_complexity = avg_complexity + results[i].metrics.complexity_cyclomatic
+        i = i + 1
+    }
+
+    if length(results) > 0 {
+        avg_complexity = avg_complexity / length(results)
+    }
+
+    report = report + "- Total LOC: " + str(total_loc) + "\n"
+    report = report + "- Issues found: " + str(total_issues) + "\n"
+    report = report + "- Avg complexity: " + str(avg_complexity) + "\n\n"
+
+    report = report + "## Files\n"
+    i = 0
+    while i < length(results) {
+        var r = results[i]
+        report = report + "### " + r.filename + "\n"
+        report = report + "- Language: " + r.language + "\n"
+        report = report + "- LOC: " + str(r.metrics.lines_of_code) + "\n"
+        report = report + "- Complexity: " + str(r.metrics.complexity_cyclomatic) + "\n"
+        report = report + "- Issues: " + str(length(r.issues)) + "\n\n"
+        i = i + 1
+    }
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║    Code-Analyzer — 코드 파서            ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    ;; 1. 파싱 테스트
+    println("1️⃣ 코드 파싱")
+    var test_code = "fn process() { for i in 0..10 { if i > 5 { return i } } }"
+    var result = parse_code(test_code, "test.fl", "freeling")
+    println("파일: " + result.filename)
+    println("언어: " + result.language)
+    println("라인: " + str(result.total_lines))
+    println("함수: " + str(result.metrics.functions))
+    println("")
+
+    ;; 2. 메트릭
+    println("2️⃣ 코드 메트릭")
+    println("- 순환 복잡도: " + str(result.metrics.complexity_cyclomatic))
+    println("- 인지 복잡도: " + str(result.metrics.complexity_cognitive))
+    println("- 중첩 깊이: " + str(result.metrics.nesting_depth))
+    println("")
+
+    ;; 3. 이슈
+    println("3️⃣ 탐지된 이슈")
+    var i: i32 = 0
+    while i < length(result.issues) {
+        var issue = result.issues[i]
+        println("  [" + issue.severity + "] " + issue.type)
+        i = i + 1
+    }
+    if length(result.issues) == 0 {
+        println("  (이슈 없음)")
+    }
+    println("")
+
+    ;; 4. 리포트
+    println("4️⃣ 분석 리포트")
+    var reports: [ParseResult] = [result]
+    var report = parse_report(reports)
+    println(substring(report, 0, 250) + "...")
+    println("")
+
+    println("✅ 코드 파서 로드 완료")
+}
