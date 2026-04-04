@@ -1,0 +1,97 @@
+// Test-Generator Scanner
+// 테스트 케이스 자동 생성을 위한 코드 분석
+
+struct TestCase {
+    id: str
+    function_name: str
+    input_type: str
+    expected_output: str
+    edge_cases: [str]
+    complexity: str  // "simple" | "moderate" | "complex"
+}
+
+struct ScanResult {
+    target_file: str
+    functions_found: i32
+    test_cases_generated: i32
+    coverage_percentage: f64
+    test_cases: [TestCase]
+}
+
+fn scan_code(code: str, filename: str) -> ScanResult {
+    var result = ScanResult {
+        target_file: filename,
+        functions_found: 0,
+        test_cases_generated: 0,
+        coverage_percentage: 0.0,
+        test_cases: []
+    }
+
+    ;; 함수 탐지
+    var i: i32 = 0
+    while i < length(code) - 3 {
+        if substring(code, i, i + 3) == "fn " {
+            result.functions_found = result.functions_found + 1
+        }
+        i = i + 1
+    }
+
+    ;; 각 함수별 테스트 케이스 생성 (최소 2개)
+    var test_cases_per_func: i32 = 2
+    if result.functions_found > 0 {
+        result.test_cases_generated = result.functions_found * test_cases_per_func
+    }
+
+    ;; 커버리지 계산
+    if result.functions_found > 0 {
+        result.coverage_percentage = f64(result.test_cases_generated) / f64(result.functions_found)
+    }
+
+    result
+}
+
+fn generate_test_cases(function_name: str, input_type: str) -> [TestCase] {
+    var cases: [TestCase] = []
+
+    ;; 기본 테스트 케이스
+    var basic = TestCase {
+        id: "test_" + function_name + "_basic",
+        function_name: function_name,
+        input_type: input_type,
+        expected_output: "success",
+        edge_cases: ["empty", "null", "valid"],
+        complexity: "simple"
+    }
+    cases.push(basic)
+
+    ;; 엣지 케이스 테스트
+    var edge = TestCase {
+        id: "test_" + function_name + "_edge",
+        function_name: function_name,
+        input_type: input_type,
+        expected_output: "handles_edge_cases",
+        edge_cases: ["boundary", "overflow", "underflow"],
+        complexity: "complex"
+    }
+    cases.push(edge)
+
+    cases
+}
+
+fn batch_scan(targets: [str]) -> [ScanResult] {
+    var results: [ScanResult] = []
+    var i: i32 = 0
+
+    while i < length(targets) {
+        var result = scan_code("", targets[i])
+        results.push(result)
+        i = i + 1
+    }
+
+    results
+}
+
+fn main() {
+    println("✅ Test-Generator Scanner 로드 완료")
+    println("기능: 함수 분석 → 테스트 케이스 자동 생성")
+}
