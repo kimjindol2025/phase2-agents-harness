@@ -1,0 +1,230 @@
+// Refactor-Suggester 에이전트 — 코드 리팩토링 분석기
+// 코드 구조 개선 기회 식별 및 제안
+
+// ==================== 구조체 정의 ====================
+
+struct RefactoringOpportunity {
+    id: str
+    category: str        // "duplication", "complexity", "naming", "design"
+    severity: str        // "critical" | "high" | "medium" | "low"
+    line_range: str
+    current_code: str
+    suggested_code: str
+    explanation: str
+    confidence: f64      // 0.0 ~ 1.0
+    effort_hours: f64
+}
+
+struct RefactorAnalysis {
+    target_file: str
+    total_lines: i32
+    opportunities_found: i32
+    critical_count: i32
+    high_count: i32
+    medium_count: i32
+    low_count: i32
+    total_effort_hours: f64
+    estimated_improvement: f64  // %
+    opportunities: [RefactoringOpportunity]
+}
+
+// ==================== 입력 검증 ====================
+
+fn validate_input(code: str) -> bool {
+    if length(code) == 0 { return false }
+    if length(code) > 1000000 { return false }
+    return true
+}
+
+// ==================== 헬퍼 함수 ====================
+
+fn contains(text: str, pattern: str) -> bool {
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            return true
+        }
+        i = i + 1
+    }
+    false
+}
+
+fn count_occurrences(text: str, pattern: str) -> i32 {
+    var count: i32 = 0
+    var i: i32 = 0
+    while i < length(text) - length(pattern) + 1 {
+        if substring(text, i, i + length(pattern)) == pattern {
+            count = count + 1
+            i = i + length(pattern)
+        } else {
+            i = i + 1
+        }
+    }
+    count
+}
+
+// ==================== 분석 함수 ====================
+
+fn analyze_refactoring(code: str, filename: str) -> RefactorAnalysis {
+    if !validate_input(code) {
+        var empty_result = RefactorAnalysis {
+            target_file: filename,
+            total_lines: 0,
+            opportunities_found: 0,
+            critical_count: 0,
+            high_count: 0,
+            medium_count: 0,
+            low_count: 0,
+            total_effort_hours: 0.0,
+            estimated_improvement: 0.0,
+            opportunities: []
+        }
+        return empty_result
+    }
+
+    var result = RefactorAnalysis {
+        target_file: filename,
+        total_lines: 0,
+        opportunities_found: 0,
+        critical_count: 0,
+        high_count: 0,
+        medium_count: 0,
+        low_count: 0,
+        total_effort_hours: 0.0,
+        estimated_improvement: 0.0,
+        opportunities: []
+    }
+
+    ;; 라인 수 계산
+    var line_count: i32 = 1
+    var i: i32 = 0
+    while i < length(code) {
+        if substring(code, i, i + 1) == "\n" {
+            line_count = line_count + 1
+        }
+        i = i + 1
+    }
+    result.total_lines = line_count
+
+    ;; 중복 코드 탐지
+    var duplication_count = count_occurrences(code, "if")
+    if duplication_count > 3 {
+        var opp = RefactoringOpportunity {
+            id: "refactor-1",
+            category: "duplication",
+            severity: "high",
+            line_range: "varies",
+            current_code: "if conditions repeated",
+            suggested_code: "extract method or use polymorphism",
+            explanation: "같은 조건이 반복되고 있습니다. 메서드 추출이나 다형성으로 개선할 수 있습니다.",
+            confidence: 0.85,
+            effort_hours: 2.0
+        }
+        result.opportunities.push(opp)
+        result.high_count = result.high_count + 1
+        result.total_effort_hours = result.total_effort_hours + 2.0
+    }
+
+    ;; 복잡도 감소 기회
+    if contains(code, "var") && line_count > 100 {
+        var opp = RefactoringOpportunity {
+            id: "refactor-2",
+            category: "complexity",
+            severity: "medium",
+            line_range: "1-" + str(line_count),
+            current_code: "long function with many variables",
+            suggested_code: "break into smaller functions",
+            explanation: "함수가 너무 길고 변수가 많습니다. 더 작은 단위로 분리할 것을 권장합니다.",
+            confidence: 0.78,
+            effort_hours: 3.5
+        }
+        result.opportunities.push(opp)
+        result.medium_count = result.medium_count + 1
+        result.total_effort_hours = result.total_effort_hours + 3.5
+    }
+
+    ;; 네이밍 개선
+    if contains(code, "var x:") || contains(code, "var i:") || contains(code, "var j:") {
+        var opp = RefactoringOpportunity {
+            id: "refactor-3",
+            category: "naming",
+            severity: "low",
+            line_range: "varies",
+            current_code: "x, i, j, temp, etc.",
+            suggested_code: "descriptive variable names",
+            explanation: "변수 이름이 모호합니다. 더 명확한 이름으로 개선할 수 있습니다.",
+            confidence: 0.92,
+            effort_hours: 1.0
+        }
+        result.opportunities.push(opp)
+        result.low_count = result.low_count + 1
+        result.total_effort_hours = result.total_effort_hours + 1.0
+    }
+
+    result.opportunities_found = length(result.opportunities)
+    if result.opportunities_found > 0 {
+        result.estimated_improvement = f64(result.opportunities_found) * 5.0
+        if result.estimated_improvement > 50.0 {
+            result.estimated_improvement = 50.0
+        }
+    }
+
+    result
+}
+
+fn batch_analyze(targets: [str]) -> [RefactorAnalysis] {
+    var results: [RefactorAnalysis] = []
+    var i: i32 = 0
+
+    while i < length(targets) {
+        var result = analyze_refactoring("", targets[i])
+        results.push(result)
+        i = i + 1
+    }
+
+    results
+}
+
+// ==================== 리포트 생성 ====================
+
+fn refactor_report(results: [RefactorAnalysis]) -> str {
+    var report: str = ""
+    report = report + "# Refactoring Analysis Report\n\n"
+    report = report + "## Summary\n"
+    report = report + "- Files analyzed: " + str(length(results)) + "\n"
+
+    var total_opportunities: i32 = 0
+    var total_effort: f64 = 0.0
+    var total_critical: i32 = 0
+
+    var i: i32 = 0
+    while i < length(results) {
+        total_opportunities = total_opportunities + results[i].opportunities_found
+        total_effort = total_effort + results[i].total_effort_hours
+        total_critical = total_critical + results[i].critical_count
+        i = i + 1
+    }
+
+    report = report + "- Total opportunities: " + str(total_opportunities) + "\n"
+    report = report + "- Critical: " + str(total_critical) + "\n"
+    report = report + "- Total effort: " + str(total_effort) + " hours\n\n"
+
+    report
+}
+
+// ==================== 테스트 ====================
+
+fn main() {
+    println("╔═══════════════════════════════════════════╗")
+    println("║     Refactor-Suggester — 분석기          ║")
+    println("╚═══════════════════════════════════════════╝")
+    println("")
+
+    var analysis = analyze_refactoring("sample code with if if if", "test.fl")
+    println("파일: " + analysis.target_file)
+    println("기회: " + str(analysis.opportunities_found))
+    println("예상 개선: " + str(analysis.estimated_improvement) + "%")
+    println("")
+
+    println("✅ Refactor-Suggester 로드 완료")
+}
