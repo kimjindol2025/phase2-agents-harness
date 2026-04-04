@@ -1,0 +1,230 @@
+{
+  "projectName": "phase2-agents-harness",
+  "language": "freeling",
+  "description": "54개 AI 에이전트 자동 조율 하네스",
+
+  "patterns": {
+    "agentStructure": {
+      "description": "모든 에이전트는 정확히 3파일로 구성",
+      "required": [
+        "parser|scanner|generator",
+        "analyzer|patcher|optimizer",
+        "proof|auditor|validator|benchmark"
+      ],
+      "location": "agents-impl/{agent-id}/{file}.fl",
+      "enforceCount": 3
+    },
+
+    "fileNaming": {
+      "agentId": {
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "examples": ["code-analyzer", "test-generator", "compliance-checker"]
+      },
+      "fileName": {
+        "pattern": "^(parser|scanner|generator|analyzer|patcher|optimizer|proof|auditor|validator|benchmark)\\.fl$",
+        "examples": ["parser.fl", "analyzer.fl", "proof.fl"]
+      }
+    }
+  },
+
+  "successCriteria": {
+    "accuracy": {
+      "min": 90,
+      "unit": "%",
+      "description": "정확도 (복잡도 분석, 취약점 감지 등)"
+    },
+    "detectionRate": {
+      "min": 85,
+      "unit": "%",
+      "description": "발견율 (이슈/취약점/성능문제 탐지)"
+    },
+    "falsePositive": {
+      "max": 5,
+      "unit": "%",
+      "description": "거짓양성률 (오탐율)"
+    },
+    "executionTime": {
+      "max": 5000,
+      "unit": "ms",
+      "description": "단일 파일 분석 시간"
+    }
+  },
+
+  "consistency": {
+    "description": "4가지 크로스 검증",
+    "minAveragePercentage": 80,
+    "targets": [
+      {
+        "name": "Code ↔ Security",
+        "agents": ["code-analyzer", "security-scanner"],
+        "validation": "복잡한 함수에 취약점 집중",
+        "targetPercentage": 100
+      },
+      {
+        "name": "Performance ↔ Log",
+        "agents": ["performance-profiler", "log-analyzer"],
+        "validation": "성능 병목 = 에러 증가",
+        "targetPercentage": 95
+      },
+      {
+        "name": "Security ↔ Code",
+        "agents": ["security-scanner", "code-analyzer"],
+        "validation": "동일 함수 정확히 식별",
+        "targetPercentage": 98
+      },
+      {
+        "name": "Document ↔ Code",
+        "agents": ["document-generator", "code-analyzer"],
+        "validation": "문서 커버리지 정확함",
+        "targetPercentage": 99.4
+      }
+    ]
+  },
+
+  "automations": {
+    "onPush": [
+      "validate_syntax",
+      "check_harness_rules",
+      "trigger_github_actions"
+    ],
+    "onPullRequest": [
+      "validate_files",
+      "run_tests",
+      "check_consistency",
+      "generate_proof"
+    ],
+    "onMerge": [
+      "update_consolidated_proof",
+      "publish_to_gogs",
+      "notify_team"
+    ]
+  },
+
+  "codeActions": {
+    "generateAgent": {
+      "command": "claude code create-agent",
+      "template": "agents-impl/{name}/template",
+      "steps": [
+        "prompt for agent details (name, category, description)",
+        "generate 3 files from template",
+        "inject success criteria (4가지)",
+        "generate test file (10 tests minimum)",
+        "generate OUTPUT_PROOF template",
+        "auto-commit with proper message",
+        "suggest push to gogs"
+      ],
+      "validation": "check_harness_rules"
+    },
+
+    "validateRules": {
+      "command": "claude code validate",
+      "checks": [
+        "file structure (3파일)",
+        "naming convention (kebab-case)",
+        "success criteria presence",
+        "consistency validation structure",
+        "dependencies definition",
+        "test coverage (minimum 10)"
+      ]
+    },
+
+    "testIntegration": {
+      "command": "claude code test",
+      "steps": [
+        "run unit tests (per agent)",
+        "run integration test (cross-validation)",
+        "check consistency (4가지)",
+        "generate report",
+        "suggest proof generation"
+      ]
+    },
+
+    "deployAgent": {
+      "command": "claude code deploy",
+      "targets": ["gogs", "github-actions"],
+      "steps": [
+        "validate all rules",
+        "run all tests",
+        "generate OUTPUT_PROOF",
+        "auto-commit",
+        "push to gogs",
+        "trigger github actions"
+      ]
+    }
+  },
+
+  "templates": {
+    "agentParser": {
+      "path": "agents-impl/{name}/parser.fl",
+      "language": "freeling",
+      "content": "// {name} Parser\n// 입력 코드 분석 및 구조화"
+    },
+    "agentAnalyzer": {
+      "path": "agents-impl/{name}/analyzer.fl",
+      "language": "freeling",
+      "content": "// {name} Analyzer\n// 핵심 로직 구현"
+    },
+    "agentProof": {
+      "path": "agents-impl/{name}/proof.fl",
+      "language": "freeling",
+      "content": "// {name} Proof\n// 성공 기준 4가지 검증"
+    },
+    "testFile": {
+      "path": "tests/{name}-test.fl",
+      "language": "freeling",
+      "content": "// {name} Tests\n// 최소 10개 테스트 필수"
+    }
+  },
+
+  "deployment": {
+    "phases": {
+      "phase2": {
+        "agents": [
+          "sql-optimizer",
+          "security-scanner",
+          "document-generator",
+          "log-analyzer",
+          "performance-profiler"
+        ],
+        "targetDate": "2026-05-14",
+        "minReadiness": 95
+      },
+      "phase3": {
+        "agents": "54 total",
+        "targetDate": "2026-06-01",
+        "minReadiness": 90
+      }
+    }
+  },
+
+  "linting": {
+    "enabled": true,
+    "rules": [
+      {
+        "id": "three-file-pattern",
+        "severity": "error",
+        "message": "All agents must have exactly 3 files (parser/analyzer/proof)"
+      },
+      {
+        "id": "naming-convention",
+        "severity": "error",
+        "message": "Agent ID must be kebab-case: ^[a-z][a-z0-9-]*$"
+      },
+      {
+        "id": "success-criteria",
+        "severity": "error",
+        "message": "All agents must define 4 success criteria"
+      },
+      {
+        "id": "test-coverage",
+        "severity": "warning",
+        "message": "Agents should have at least 10 tests"
+      },
+      {
+        "id": "consistency-validation",
+        "severity": "warning",
+        "message": "Cross-validations should be defined"
+      }
+    ]
+  }
+}

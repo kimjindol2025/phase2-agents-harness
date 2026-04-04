@@ -1,0 +1,120 @@
+{
+  "claudeCode.project": {
+    "name": "phase2-agents-harness",
+    "description": "54개 AI 에이전트 자동 조율 하네스",
+    "rules": ".claude/claude-code-rules.json",
+    "autoCommit": true,
+    "autoTest": true,
+    "validateOnSave": true
+  },
+
+  "claudeCode.mcp": {
+    "servers": [
+      {
+        "name": "gogs",
+        "enabled": true,
+        "command": "node",
+        "args": ["mcp-servers/gogs.js"],
+        "env": {
+          "GOGS_TOKEN": "${env:GOGS_TOKEN}"
+        },
+        "retryCount": 3,
+        "timeout": 30000
+      },
+      {
+        "name": "freelang-validator",
+        "enabled": true,
+        "command": "freelang",
+        "args": ["mcp-servers/freelang-validator.fl"],
+        "timeout": 10000
+      },
+      {
+        "name": "github-actions",
+        "enabled": true,
+        "command": "node",
+        "args": ["mcp-servers/github-actions.js"],
+        "env": {
+          "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+        },
+        "timeout": 30000
+      }
+    ]
+  },
+
+  "claudeCode.shortcuts": {
+    "generateAgent": "Ctrl+Shift+A",
+    "validateRules": "Ctrl+Shift+V",
+    "testIntegration": "Ctrl+Shift+T",
+    "deployAgent": "Ctrl+Shift+D",
+    "showStatus": "Ctrl+Shift+S"
+  },
+
+  "claudeCode.codeActions": [
+    "generateAgent",
+    "validateRules",
+    "testIntegration",
+    "deployAgent"
+  ],
+
+  "claudeCode.autoActions": {
+    "onSave": [
+      {
+        "action": "validateRules",
+        "enabled": true,
+        "showProblems": true
+      }
+    ],
+    "onPush": [
+      {
+        "action": "validateRules",
+        "enabled": true
+      },
+      {
+        "action": "triggerWorkflow",
+        "workflow": "agent-test.yml",
+        "enabled": true
+      }
+    ]
+  },
+
+  "claudeCode.templates": {
+    "agentParser": "agents-impl/{name}/parser.fl",
+    "agentAnalyzer": "agents-impl/{name}/analyzer.fl",
+    "agentProof": "agents-impl/{name}/proof.fl",
+    "testFile": "tests/{name}-test.fl"
+  },
+
+  "claudeCode.validation": {
+    "strictMode": true,
+    "checkThreeFilePattern": true,
+    "checkNamingConvention": true,
+    "checkSuccessCriteria": true,
+    "checkTestCoverage": true,
+    "checkConsistencyValidation": true
+  },
+
+  "claudeCode.display": {
+    "showStatus": true,
+    "showProblems": true,
+    "showSuggestions": true,
+    "statusBarItems": ["status", "deployment", "tests"],
+    "problemLevel": "warning"
+  },
+
+  "[freeling]": {
+    "editor.defaultFormatter": "claudeCode.freelang",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
+  },
+
+  "search.exclude": {
+    ".claude": true,
+    "node_modules": true,
+    ".git": true
+  },
+
+  "files.watcherExclude": {
+    "**/.claude/**": true,
+    "**/node_modules/**": true
+  }
+}

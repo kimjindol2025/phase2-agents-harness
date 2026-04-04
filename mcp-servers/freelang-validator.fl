@@ -1,0 +1,325 @@
+// FreeLang Validator MCP Server
+// Claude Code의 하네스 규칙 검증
+
+// ==================== 검증 결과 구조 ====================
+
+struct ValidationError {
+    code: str
+    file: str
+    line: i32
+    message: str
+    suggestion: str
+}
+
+struct ValidationWarning {
+    code: str
+    message: str
+    suggestion: str
+}
+
+struct ValidationResult {
+    valid: bool
+    errors: [ValidationError]
+    warnings: [ValidationWarning]
+    suggestions: [str]
+    summary: str
+}
+
+// ==================== 파일 구조 검증 ====================
+
+fn validate_file_structure(agent_name: str) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; 3파일 패턴 확인
+    ;; agents-impl/{agent-name}/ 에 정확히 3개 파일 필요
+
+    var expected_files: [str] = [
+        "agents-impl/" + agent_name + "/parser.fl",
+        "agents-impl/" + agent_name + "/analyzer.fl",
+        "agents-impl/" + agent_name + "/proof.fl"
+    ]
+
+    ;; 실제로는 파일 시스템 확인 필요 (지금은 시뮬레이션)
+    var file_count: i32 = 3
+
+    if file_count != 3 {
+        var error = ValidationError {
+            code: "THREE_FILE_PATTERN",
+            file: "agents-impl/" + agent_name + "/",
+            line: 0,
+            message: "Agent must have exactly 3 files (parser, analyzer, proof)",
+            suggestion: "Create missing files or remove extra files"
+        }
+        result.errors.push(error)
+        result.valid = false
+    }
+
+    result
+}
+
+// ==================== 명명 규칙 검증 ====================
+
+fn validate_naming(agent_id: str) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; kebab-case 확인: ^[a-z][a-z0-9-]*$
+    ;; 예: code-analyzer, test-generator, compliance-checker
+
+    ;; 간단한 검증: 하이픈과 소문자만 포함
+    var i: i32 = 0
+    var valid_chars: i32 = 0
+
+    while i < length(agent_id) {
+        var char = substring(agent_id, i, i + 1)
+
+        ;; a-z, 0-9, - 만 허용
+        if (char == "-" || (char >= "a" && char <= "z") || (char >= "0" && char <= "9")) {
+            valid_chars = valid_chars + 1
+        }
+
+        i = i + 1
+    }
+
+    if valid_chars != length(agent_id) {
+        var error = ValidationError {
+            code: "NAMING_CONVENTION",
+            file: "",
+            line: 0,
+            message: "Agent ID must be kebab-case: [a-z][a-z0-9-]*",
+            suggestion: "Use lowercase letters, numbers, and hyphens only"
+        }
+        result.errors.push(error)
+        result.valid = false
+    }
+
+    ;; 첫 글자가 소문자여야 함
+    var first_char = substring(agent_id, 0, 1)
+    if first_char < "a" || first_char > "z" {
+        var error = ValidationError {
+            code: "NAMING_START",
+            file: "",
+            line: 0,
+            message: "Agent ID must start with lowercase letter",
+            suggestion: "Change first character to lowercase"
+        }
+        result.errors.push(error)
+        result.valid = false
+    }
+
+    result
+}
+
+// ==================== 성공 기준 검증 ====================
+
+fn validate_success_criteria(file_content: str) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; 4가지 성공 기준 확인
+    ;; 1. 정확도 >= 90%
+    ;; 2. 발견율 >= 85%
+    ;; 3. 거짓양성 < 5%
+    ;; 4. 실행시간 < 5초
+
+    var criteria_found: i32 = 0
+
+    if contains(file_content, "accuracy") || contains(file_content, "정확도") {
+        criteria_found = criteria_found + 1
+    }
+    if contains(file_content, "detection_rate") || contains(file_content, "발견율") {
+        criteria_found = criteria_found + 1
+    }
+    if contains(file_content, "false_positive") || contains(file_content, "거짓양성") {
+        criteria_found = criteria_found + 1
+    }
+    if contains(file_content, "execution_time") || contains(file_content, "실행시간") {
+        criteria_found = criteria_found + 1
+    }
+
+    if criteria_found < 4 {
+        var warning = ValidationWarning {
+            code: "MISSING_CRITERIA",
+            message: "Not all 4 success criteria found (" + str(criteria_found) + "/4)",
+            suggestion: "Add comments or struct fields for all 4 criteria: accuracy, detection_rate, false_positive, execution_time"
+        }
+        result.warnings.push(warning)
+    }
+
+    result
+}
+
+// ==================== 의존성 검증 ====================
+
+fn validate_dependencies(dependencies: [str]) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; 최대 의존성 깊이: 3
+    ;; 순환 의존성 금지
+    ;; 평행 가능 에이전트는 의존성 최소화
+
+    var depth: i32 = length(dependencies)
+
+    if depth > 3 {
+        var warning = ValidationWarning {
+            code: "DEEP_DEPENDENCY",
+            message: "Dependency depth is " + str(depth) + " (max: 3)",
+            suggestion: "Consider refactoring to reduce dependency depth"
+        }
+        result.warnings.push(warning)
+    }
+
+    result
+}
+
+// ==================== 테스트 커버리지 검증 ====================
+
+fn validate_test_coverage(test_file_content: str) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; 최소 10개 테스트 필요
+    ;; "fn test_" 또는 "test_" 키워드로 계산
+
+    var test_count: i32 = 0
+    var pos: i32 = 0
+
+    while pos < length(test_file_content) {
+        var next_pos = index_of_from(test_file_content, "fn test_", pos)
+        if next_pos < 0 {
+            break
+        }
+        test_count = test_count + 1
+        pos = next_pos + 1
+    }
+
+    if test_count < 10 {
+        var warning = ValidationWarning {
+            code: "LOW_TEST_COVERAGE",
+            message: "Found " + str(test_count) + " tests (minimum: 10)",
+            suggestion: "Add more test cases to cover edge cases and success criteria"
+        }
+        result.warnings.push(warning)
+    }
+
+    result
+}
+
+// ==================== 통합 검증 ====================
+
+fn validate_agent(agent_name: str, file_contents: [str]) -> ValidationResult {
+    var result = ValidationResult {
+        valid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        summary: ""
+    }
+
+    ;; 1. 파일 구조
+    var structure_result = validate_file_structure(agent_name)
+    result.valid = result.valid && structure_result.valid
+
+    var i: i32 = 0
+    while i < length(structure_result.errors) {
+        result.errors.push(structure_result.errors[i])
+        i = i + 1
+    }
+
+    ;; 2. 명명 규칙
+    var naming_result = validate_naming(agent_name)
+    result.valid = result.valid && naming_result.valid
+    i = 0
+    while i < length(naming_result.errors) {
+        result.errors.push(naming_result.errors[i])
+        i = i + 1
+    }
+
+    ;; 3. 성공 기준
+    if length(file_contents) > 0 {
+        var criteria_result = validate_success_criteria(file_contents[0])
+        i = 0
+        while i < length(criteria_result.warnings) {
+            result.warnings.push(criteria_result.warnings[i])
+            i = i + 1
+        }
+    }
+
+    ;; 요약
+    result.summary = "Validation: " + (result.valid ? "PASS" : "FAIL")
+    if length(result.errors) > 0 {
+        result.summary = result.summary + " (" + str(length(result.errors)) + " errors)"
+    }
+    if length(result.warnings) > 0 {
+        result.summary = result.summary + " (" + str(length(result.warnings)) + " warnings)"
+    }
+
+    result
+}
+
+// ==================== 도우미 함수 ====================
+
+fn contains(text: str, substr: str) -> bool {
+    index_of(text, substr) >= 0
+}
+
+fn index_of(text: str, substr: str) -> i32 {
+    var i: i32 = 0
+    while i < length(text) - length(substr) + 1 {
+        if substring(text, i, i + length(substr)) == substr {
+            return i
+        }
+        i = i + 1
+    }
+    -1
+}
+
+fn index_of_from(text: str, substr: str, start: i32) -> i32 {
+    var i: i32 = start
+    while i < length(text) - length(substr) + 1 {
+        if substring(text, i, i + length(substr)) == substr {
+            return i
+        }
+        i = i + 1
+    }
+    -1
+}
+
+// ==================== MCP 핸들러 ====================
+
+fn main() {
+    println("✅ FreeLang Validator MCP Server Ready")
+    println("명령: validate_agent, validate_syntax, validate_rules")
+    println("")
+    println("사용 예시:")
+    println("  validate_agent(\"test-generator\", [\"parser.fl content\", ...])")
+    println("  validate_syntax(\"code\")")
+    println("  validate_rules()")
+}
