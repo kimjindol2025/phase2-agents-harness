@@ -1,0 +1,44 @@
+{
+  "name": "phase2-agents-harness",
+  "version": "1.0.0",
+  "description": "AI Agent Harness for Phase 2 - Standards Implementation and Validation",
+  "main": "harness/orchestrator-main.fl",
+  "scripts": {
+    "test": "jest --coverage --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:verbose": "jest --verbose",
+    "build": "tsc",
+    "dev": "ts-node harness/orchestrator-main.fl",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "validate": "npm run test && npm run lint",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "keywords": [
+    "agents",
+    "harness",
+    "freelang",
+    "phase2",
+    "validation"
+  ],
+  "author": "FreeLang Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.40.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

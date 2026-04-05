@@ -1,0 +1,345 @@
+// ============================================================================
+// validation-harness.fl - AI 에이전트 하네스 입력 검증 모듈
+// 54개 에이전트의 입력값 검증을 위한 표준화된 함수 모음
+// ============================================================================
+
+module validation_harness
+
+// ============================================================================
+// 에이전트 메타 검증
+// ============================================================================
+
+struct ValidationResult {
+    valid: bool
+    message: str
+    error_code: str   // "INVALID_INPUT" | "MISSING_FIELD" | "TYPE_ERROR" | "RANGE_ERROR"
+}
+
+// validateAgentMeta: 에이전트 메타데이터 검증
+fn validateAgentMeta(id: str, name: str, category: str) -> ValidationResult {
+    if id == null || id == "" {
+        return ValidationResult {
+            valid: false,
+            message: "에이전트 ID는 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    if name == null || name == "" {
+        return ValidationResult {
+            valid: false,
+            message: "에이전트 이름은 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    let valid_categories = ["dev", "ops", "deploy", "learn"]
+    var is_valid_category = false
+    var i = 0
+    while i < length(valid_categories) {
+        if category == valid_categories[i] {
+            is_valid_category = true
+            break
+        }
+        i = i + 1
+    }
+
+    if !is_valid_category {
+        return ValidationResult {
+            valid: false,
+            message: "유효하지 않은 카테고리입니다. 허용: dev, ops, deploy, learn",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "메타데이터 검증 성공",
+        error_code: ""
+    }
+}
+
+// validateAgentInputs: 에이전트 입력값 검증
+fn validateAgentInputs(input_code: str, max_lines: i32) -> ValidationResult {
+    if input_code == null || input_code == "" {
+        return ValidationResult {
+            valid: false,
+            message: "입력 코드는 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    let lines = input_code.split("\n")
+    let line_count = length(lines)
+
+    if line_count > max_lines {
+        return ValidationResult {
+            valid: false,
+            message: "입력 코드가 최대 라인 수(" + str(max_lines) + ")를 초과했습니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "입력값 검증 성공",
+        error_code: ""
+    }
+}
+
+// validateDependencies: 에이전트 의존성 검증 (순환 참조 방지)
+fn validateDependencies(agent_id: str, dependencies: [str], all_agents: [str]) -> ValidationResult {
+    // 자기 자신을 의존하는지 확인
+    var i = 0
+    while i < length(dependencies) {
+        if dependencies[i] == agent_id {
+            return ValidationResult {
+                valid: false,
+                message: "에이전트가 자기 자신에 의존할 수 없습니다",
+                error_code: "INVALID_INPUT"
+            }
+        }
+        i = i + 1
+    }
+
+    // 존재하지 않는 에이전트를 의존하는지 확인
+    i = 0
+    while i < length(dependencies) {
+        var dep = dependencies[i]
+        var found = false
+        var j = 0
+        while j < length(all_agents) {
+            if all_agents[j] == dep {
+                found = true
+                break
+            }
+            j = j + 1
+        }
+        if !found {
+            return ValidationResult {
+                valid: false,
+                message: "존재하지 않는 에이전트를 의존합니다: " + dep,
+                error_code: "INVALID_INPUT"
+            }
+        }
+        i = i + 1
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "의존성 검증 성공",
+        error_code: ""
+    }
+}
+
+// validateExecutionConfig: 실행 설정 검증
+fn validateExecutionConfig(parallel_enabled: bool, timeout_ms: i32) -> ValidationResult {
+    if timeout_ms <= 0 {
+        return ValidationResult {
+            valid: false,
+            message: "타임아웃은 0보다 커야 합니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    if timeout_ms > 300000 {  // 5분 제한
+        return ValidationResult {
+            valid: false,
+            message: "타임아웃이 최대값(300000ms)을 초과했습니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "실행 설정 검증 성공",
+        error_code: ""
+    }
+}
+
+// validateOutputFormat: 출력 형식 검증
+fn validateOutputFormat(format: str) -> ValidationResult {
+    let valid_formats = ["markdown", "json", "yaml", "xml"]
+    var i = 0
+    var found = false
+
+    while i < length(valid_formats) {
+        if format == valid_formats[i] {
+            found = true
+            break
+        }
+        i = i + 1
+    }
+
+    if !found {
+        return ValidationResult {
+            valid: false,
+            message: "유효하지 않은 출력 형식입니다. 허용: markdown, json, yaml, xml",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "출력 형식 검증 성공",
+        error_code: ""
+    }
+}
+
+// ============================================================================
+// SQL-Optimizer 입력 검증
+// ============================================================================
+
+fn validateSqlQuery(sql_code: str, max_size: i32) -> ValidationResult {
+    if sql_code == null || sql_code == "" {
+        return ValidationResult {
+            valid: false,
+            message: "SQL 쿼리는 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    let size = length(sql_code)
+    if size > max_size {
+        return ValidationResult {
+            valid: false,
+            message: "SQL 쿼리 크기가 제한을 초과했습니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    // 기본 SQL 키워드 확인
+    let upper_sql = sql_code  // TODO: 대문자 변환 함수
+    let has_select = upper_sql.includes("SELECT")
+    let has_from = upper_sql.includes("FROM")
+
+    if !has_select || !has_from {
+        return ValidationResult {
+            valid: false,
+            message: "유효하지 않은 SQL 쿼리입니다",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "SQL 쿼리 검증 성공",
+        error_code: ""
+    }
+}
+
+// ============================================================================
+// Security-Scanner 입력 검증
+// ============================================================================
+
+fn validateSourceCode(code: str, file_type: str) -> ValidationResult {
+    if code == null || code == "" {
+        return ValidationResult {
+            valid: false,
+            message: "소스 코드는 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    let valid_types = ["py", "js", "ts", "java", "go", "rust", "fl"]
+    var i = 0
+    var found = false
+
+    while i < length(valid_types) {
+        if file_type == valid_types[i] {
+            found = true
+            break
+        }
+        i = i + 1
+    }
+
+    if !found {
+        return ValidationResult {
+            valid: false,
+            message: "지원하지 않는 파일 형식입니다",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "소스 코드 검증 성공",
+        error_code: ""
+    }
+}
+
+// ============================================================================
+// Log-Analyzer 입력 검증
+// ============================================================================
+
+fn validateLogInput(logs: str, log_format: str) -> ValidationResult {
+    if logs == null || logs == "" {
+        return ValidationResult {
+            valid: false,
+            message: "로그는 필수입니다",
+            error_code: "MISSING_FIELD"
+        }
+    }
+
+    let valid_formats = ["json", "syslog", "plain", "structured"]
+    var i = 0
+    var found = false
+
+    while i < length(valid_formats) {
+        if log_format == valid_formats[i] {
+            found = true
+            break
+        }
+        i = i + 1
+    }
+
+    if !found {
+        return ValidationResult {
+            valid: false,
+            message: "지원하지 않는 로그 형식입니다",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "로그 입력 검증 성공",
+        error_code: ""
+    }
+}
+
+// ============================================================================
+// 벤치마크 및 성능 검증
+// ============================================================================
+
+fn validatePerformanceMetrics(execution_time: i32, confidence: f64) -> ValidationResult {
+    if execution_time < 0 {
+        return ValidationResult {
+            valid: false,
+            message: "실행 시간은 음수일 수 없습니다",
+            error_code: "INVALID_INPUT"
+        }
+    }
+
+    if confidence < 0.0 || confidence > 1.0 {
+        return ValidationResult {
+            valid: false,
+            message: "신뢰도는 0.0~1.0 범위여야 합니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    if confidence < 0.7 {
+        return ValidationResult {
+            valid: false,
+            message: "신뢰도가 최소값(0.7) 미만입니다",
+            error_code: "RANGE_ERROR"
+        }
+    }
+
+    return ValidationResult {
+        valid: true,
+        message: "성능 메트릭 검증 성공",
+        error_code: ""
+    }
+}
