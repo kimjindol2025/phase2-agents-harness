@@ -1,0 +1,16 @@
+{
+  "name": "phase2-harness",
+  "version": "1.0.0",
+  "description": "Phase 2 에이전트 하네스 조직 표준 플러그인",
+  "author": {
+    "name": "Phase 2 Team",
+    "email": "kim@dclub.kr"
+  },
+  "commands": [
+    "harness-status",
+    "harness-new-agent",
+    "harness-validate",
+    "harness-proof",
+    "run-agent"
+  ]
+}
