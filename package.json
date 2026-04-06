@@ -17,7 +17,9 @@
     "deploy": "bash scripts/deploy.sh",
     "harness:status": "echo 'Harness Status: Use /harness-status command in Claude Code'",
     "harness:validate": "bash scripts/validate-harness.sh",
-    "bridge": "ts-node src/bridge/freelang-bridge.ts"
+    "bridge": "ts-node src/bridge/freelang-bridge.ts",
+    "fl": "ts-node src/freelang-cli.ts run",
+    "fl:test": "ts-node src/freelang-cli.ts test"
   },
   "keywords": [
     "agents",
