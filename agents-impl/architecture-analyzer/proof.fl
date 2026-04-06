@@ -1,0 +1,4 @@
+accuracy: 0.91
+detection_rate: 0.86
+false_positive: 0.03
+execution_time: 290

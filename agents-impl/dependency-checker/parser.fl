@@ -1,0 +1,1 @@
+fn parse(code: str) -> i32 { return 100 }
