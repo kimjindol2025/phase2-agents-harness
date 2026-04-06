@@ -1,0 +1,9 @@
+{
+  "name": "phase2-commit",
+  "description": "Phase 2 에이전트 하네스 커밋 플러그인 (npm test 검증 필수)",
+  "version": "1.0.0",
+  "author": {
+    "name": "Phase 2 Team",
+    "email": "kim@dclub.kr"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "language": "한국어",
+  "model": "haiku",
+  "effortLevel": "high",
+  "showThinkingSummaries": true,
+  "alwaysThinkingEnabled": true,
+  "plugins": [
+    "code-review",
+    "commit-commands",
+    "security-guidance",
+    "pr-review-toolkit",
+    "feature-dev"
+  ],
+  "env": {
+    "GOGS_TOKEN": "${GOGS_TOKEN}",
+    "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+    "FREELANG_HOME": ".",
+    "PHASE2_HOME": "."
+  },
+  "hooks": {
+    "onPush": [
+      "validate_syntax",
+      "check_harness_rules",
+      "trigger_github_actions"
+    ],
+    "onPullRequest": [
+      "validate_files",
+      "run_tests",
+      "check_consistency",
+      "generate_proof"
+    ],
+    "onMerge": [
+      "update_consolidated_proof",
+      "publish_to_gogs",
+      "notify_team"
+    ]
+  },
+  "codeActions": {
+    "code-review": {
+      "enabled": true,
+      "threshold": 80,
+      "agents": 4,
+      "validateCLAUDE": true
+    },
+    "commit-commands": {
+      "enabled": true,
+      "requireTests": true,
+      "requireProof": true
+    },
+    "security-guidance": {
+      "enabled": true,
+      "patterns": 9,
+      "preToolUse": true
+    }
+  }
+}
