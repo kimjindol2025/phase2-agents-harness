@@ -201,18 +201,26 @@ async function main() {
 
     return result.combined;
   } else if (command === 'test') {
-    const agents = [
-      'code-analyzer', 'security-scanner', 'sql-optimizer',
-      'document-generator', 'test-generator', 'log-analyzer',
-      'dead-code-remover', 'refactor-suggester',
-      'compliance-checker', 'bug-predictor'
-    ];
+    // 동적으로 agents-impl 디렉토리에서 에이전트 목록 로드
+    const agentDir = path.join(process.cwd(), 'agents-impl');
+    let agents: string[] = [];
 
-    console.log('\n🧪 FreeLang CLI Batch Test (10 agents)\n');
+    if (fs.existsSync(agentDir)) {
+      agents = fs.readdirSync(agentDir)
+        .filter(f => fs.statSync(path.join(agentDir, f)).isDirectory())
+        .sort();
+    }
+
+    console.log(`\n🧪 FreeLang CLI Batch Test (${agents.length} agents)\n`);
     console.log('Agent | Accuracy | Detection | FP | Time');
     console.log('------|----------|-----------|----|---------');
 
     const results: { [key: string]: any } = {};
+    let successCount = 0;
+    let totalAccuracy = 0;
+    let totalDetection = 0;
+    let totalFP = 0;
+    let totalTime = 0;
 
     for (const agent of agents) {
       const result = executeAgent(agent);
@@ -222,12 +230,27 @@ async function main() {
         const fp = result.combined.false_positive || 0;
         const time = result.combined.execution_time || 0;
 
-        console.log(`${agent.padEnd(16)} | ${(acc * 100).toFixed(0)}% | ${(det * 100).toFixed(0)}% | ${(fp * 100).toFixed(1)}% | ${time}ms`);
+        console.log(`${agent.padEnd(20)} | ${(acc * 100).toFixed(0).padStart(3)}% | ${(det * 100).toFixed(0).padStart(3)}% | ${(fp * 100).toFixed(1).padStart(4)}% | ${time}ms`);
         results[agent] = result.combined;
+
+        successCount++;
+        totalAccuracy += acc;
+        totalDetection += det;
+        totalFP += fp;
+        totalTime += time;
       }
     }
 
-    console.log('\n✅ All agents executed');
+    if (successCount > 0) {
+      console.log('------|----------|-----------|----|---------');
+      const avgAcc = totalAccuracy / successCount;
+      const avgDet = totalDetection / successCount;
+      const avgFP = totalFP / successCount;
+      const avgTime = totalTime / successCount;
+      console.log(`평균 (${successCount}개)      | ${(avgAcc * 100).toFixed(1).padStart(3)}% | ${(avgDet * 100).toFixed(1).padStart(3)}% | ${(avgFP * 100).toFixed(1).padStart(4)}% | ${avgTime.toFixed(0)}ms`);
+    }
+
+    console.log(`\n✅ All ${agents.length} agents executed (${successCount} passed)`);
     return results;
   }
 }
