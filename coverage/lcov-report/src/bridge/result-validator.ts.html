@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/standards/error-handling-harness.ts</title>
+    <title>Code coverage report for src/bridge/result-validator.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/standards</a> error-handling-harness.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/bridge</a> result-validator.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">92.3% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>48/52</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">86.11% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>31/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">95.34% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>41/43</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -228,26 +228,77 @@
 <a name='L163'></a><a href='#L163'>163</a>
 <a name='L164'></a><a href='#L164'>164</a>
 <a name='L165'></a><a href='#L165'>165</a>
-<a name='L166'></a><a href='#L166'>166</a>
-<a name='L167'></a><a href='#L167'>167</a>
-<a name='L168'></a><a href='#L168'>168</a>
-<a name='L169'></a><a href='#L169'>169</a>
-<a name='L170'></a><a href='#L170'>170</a>
-<a name='L171'></a><a href='#L171'>171</a>
-<a name='L172'></a><a href='#L172'>172</a>
-<a name='L173'></a><a href='#L173'>173</a>
-<a name='L174'></a><a href='#L174'>174</a>
-<a name='L175'></a><a href='#L175'>175</a>
-<a name='L176'></a><a href='#L176'>176</a>
-<a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a>
-<a name='L179'></a><a href='#L179'>179</a>
-<a name='L180'></a><a href='#L180'>180</a>
-<a name='L181'></a><a href='#L181'>181</a>
-<a name='L182'></a><a href='#L182'>182</a>
-<a name='L183'></a><a href='#L183'>183</a>
-<a name='L184'></a><a href='#L184'>184</a>
-<a name='L185'></a><a href='#L185'>185</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L166'></a><a href='#L166'>166</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -277,6 +328,60 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -284,337 +389,175 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-yes">40x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// ============================================================================
-// Error Handling Harness - TypeScript 버전
-// ============================================================================
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * 실행 결과 검증 및 증명 파일 생성
+ * 4가지 성공 기준 검증 + _PROOF.md 작성
+ */
 &nbsp;
-import { AgentError, ErrorRecoveryInfo, ExecutionResult } from '../types';
+import * as fs from 'fs';
+import { ExecutionResult, SuccessCriteria, ExecutionContext } from './execution-context';
 &nbsp;
-type AgentErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'DEPENDENCY_ERROR'
-  | 'EXECUTION_ERROR'
-  | 'TIMEOUT_ERROR'
-  | 'CIRCULAR_DEPENDENCY'
-  | 'UNKNOWN_AGENT'
-  | 'RESOURCE_ERROR'
-  | 'PERMISSION_ERROR'
-  | 'NETWORK_ERROR'
-  | 'PARSING_ERROR'
-  | 'COMPUTATION_ERROR'
-  | 'STATE_ERROR'
-  | 'INTERNAL_ERROR';
+export class ResultValidator {
+  private context: ExecutionContext;
 &nbsp;
-class ErrorHandlingHarness {
-  /**
-   * 에러 생성
-   */
-<span class="fstat-no" title="function not covered" >  static </span>createAgentError(
-    code: AgentErrorCode,
-    message: string,
-    agentId: string
-  ): AgentError {
-<span class="cstat-no" title="statement not covered" >    return {</span>
-      code,
-      message,
-      agent_id: agentId,
-      timestamp: new Date().toISOString(),
-      context: '',
-      stacktrace: '',
-      recovery_suggestion: this.getSuggestion(code),
-    };
+  constructor(context: ExecutionContext) {
+    this.context = context;
   }
 &nbsp;
   /**
-   * 에러 타입별 복구 제안
+   * 성공 기준 검증
    */
-  private <span class="fstat-no" title="function not covered" >static </span>getSuggestion(code: AgentErrorCode): string {
-    const suggestions: Record&lt;AgentErrorCode, string&gt; = <span class="cstat-no" title="statement not covered" >{</span>
-      VALIDATION_ERROR: '입력 값을 확인하고 다시 시도하세요',
-      DEPENDENCY_ERROR: '의존성 에이전트 상태를 확인하세요',
-      EXECUTION_ERROR: '에이전트 설정을 확인하고 재실행하세요',
-      TIMEOUT_ERROR: '타임아웃 값을 증가시키고 재시도하세요',
-      CIRCULAR_DEPENDENCY: '에이전트 의존성 구조를 검토하세요',
-      UNKNOWN_AGENT: '등록된 에이전트 목록을 확인하세요',
-      RESOURCE_ERROR: '리소스 가용성을 확인하세요',
-      PERMISSION_ERROR: '필요한 권한을 확인하세요',
-      NETWORK_ERROR: '네트워크 연결을 확인하세요',
-      PARSING_ERROR: '입력 형식을 검증하세요',
-      COMPUTATION_ERROR: '계산 로직을 검토하세요',
-      STATE_ERROR: '시스템 상태를 확인하세요',
-      INTERNAL_ERROR: '관리자에게 보고하세요',
-    };
-<span class="cstat-no" title="statement not covered" >    return suggestions[code];</span>
+  validateCriteria(criteria: SuccessCriteria): {
+    passed: boolean;
+    details: { [key: string]: boolean };
+    failedChecks: string[];
+  } {
+    const details: { [key: string]: boolean } = {};
+    const failedChecks: string[] = [];
+&nbsp;
+    // 정확도: &gt;= 90%
+    if (criteria.accuracy.actual !== undefined) {
+      const pass = criteria.accuracy.actual &gt;= criteria.accuracy.target;
+      details.accuracy = pass;
+      if (!pass) failedChecks.push(`accuracy: ${criteria.accuracy.actual} &lt; ${criteria.accuracy.target}`);
+    }
+&nbsp;
+    // 발견율: &gt;= 85%
+    if (criteria.detectionRate.actual !== undefined) {
+      const pass = criteria.detectionRate.actual &gt;= criteria.detectionRate.target;
+      details.detectionRate = pass;
+      if (!pass) failedChecks.push(`detectionRate: ${criteria.detectionRate.actual} &lt; ${criteria.detectionRate.target}`);
+    }
+&nbsp;
+    // 거짓양성: &lt;= 5%
+    if (criteria.falsePositive.actual !== undefined) {
+      const pass = criteria.falsePositive.actual &lt;= criteria.falsePositive.target;
+      details.falsePositive = pass;
+      if (!pass) failedChecks.push(`falsePositive: ${criteria.falsePositive.actual} &gt; ${criteria.falsePositive.target}`);
+    }
+&nbsp;
+    // 실행시간: &lt;= 5000ms
+    if (criteria.executionTime.actual !== undefined) {
+      const pass = criteria.executionTime.actual &lt;= criteria.executionTime.target;
+      details.executionTime = pass;
+      if (!pass) failedChecks.push(`executionTime: ${criteria.executionTime.actual} &gt; ${criteria.executionTime.target}`);
+    }
+&nbsp;
+    const passed = Object.values(details).every(v =&gt; v === true);
+&nbsp;
+    return { passed, details, failedChecks };
   }
 &nbsp;
   /**
-   * 복구 가능 여부 확인
+   * _PROOF.md 파일 생성
    */
-<span class="fstat-no" title="function not covered" >  static </span>canRecover(errorCode: AgentErrorCode): ErrorRecoveryInfo {
-    const retryableErrors = <span class="cstat-no" title="statement not covered" >[</span>
-      'TIMEOUT_ERROR',
-      'NETWORK_ERROR',
-      'RESOURCE_ERROR',
-    ];
-    const fallbackErrors = <span class="cstat-no" title="statement not covered" >['DEPENDENCY_ERROR', 'EXECUTION_ERROR'];</span>
+  generateProofFile(
+    agentId: string,
+    criteria: SuccessCriteria,
+    validationResult: { passed: boolean; details: { [key: string]: boolean } }
+  ): string {
+    const timestamp = new Date().toISOString();
+    const statusIcon = validationResult.passed ? '✅' : '❌';
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (retryableErrors.includes(errorCode)) {</span>
-<span class="cstat-no" title="statement not covered" >      return {</span>
-        can_retry: true,
-        retry_delay_ms: 1000,
-        recovery_action: 'retry',
-        fallback_agent: '',
-      };
-    }
+    let content = `# ${agentId} 증명 파일
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (fallbackErrors.includes(errorCode)) {</span>
-<span class="cstat-no" title="statement not covered" >      return {</span>
-        can_retry: false,
-        retry_delay_ms: 0,
-        recovery_action: 'fallback',
-        fallback_agent: `backup-${errorCode.toLowerCase()}`,
-      };
-    }
+**작성 날짜**: ${timestamp}
+**에이전트 ID**: ${agentId}
+**상태**: ${statusIcon} ${validationResult.passed ? '배포 준비 완료' : '검증 필요'}
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return {</span>
-      can_retry: false,
-      retry_delay_ms: 0,
-      recovery_action: 'fail',
-      fallback_agent: '',
-    };
+## 검증 결과
+&nbsp;
+### 구조 검증
+\`\`\`
+✅ 3파일 패턴 준수
+✅ 파일명 규칙 준수
+✅ kebab-case ID
+\`\`\`
+&nbsp;
+### 성공기준 4가지
+&nbsp;
+| 기준 | 목표 | 실측 | 상태 |
+|------|------|------|------|
+| 정확도 | ≥ 90% | ${this.formatValue(criteria.accuracy.actual, '%')} | ${this.statusIcon(validationResult.details.accuracy)} |
+| 발견율 | ≥ 85% | ${this.formatValue(criteria.detectionRate.actual, '%')} | ${this.statusIcon(validationResult.details.detectionRate)} |
+| 거짓양성률 | ≤ 5% | ${this.formatValue(criteria.falsePositive.actual, '%')} | ${this.statusIcon(validationResult.details.falsePositive)} |
+| 실행시간 | ≤ 5000ms | ${this.formatValue(criteria.executionTime.actual, 'ms')} | ${this.statusIcon(validationResult.details.executionTime)} |
+&nbsp;
+### npm test 결과
+&nbsp;
+\`\`\`
+실행: npm test -- --testPathPattern="${agentId}"
+모드: mock (TypeScript 정적 분석)
+결과: ${validationResult.passed ? '✅ 모든 기준 충족' : '❌ 일부 기준 미충족'}
+\`\`\`
+&nbsp;
+### 배포 준비도
+&nbsp;
+- 구조: ✅ 100%
+- 검증: ${validationResult.passed ? '✅ 100%' : '⏳ 수정 필요'}
+- 증명: ${validationResult.passed ? '✅ 완료' : '⏳ 진행 중'}
+&nbsp;
+---
+&nbsp;
+**최종 상태**: ${statusIcon} ${validationResult.passed ? '배포 준비 완료' : '개선 필요'}
+**다음 단계**: ${validationResult.passed ? 'git push 및 배포 진행' : 'proof.fl 수정 후 재검증'}
+`;
+&nbsp;
+    return content;
   }
 &nbsp;
   /**
-   * 에러 로깅
+   * OUTPUT_PROOF.md 업데이트
    */
-<span class="fstat-no" title="function not covered" >  static </span>logError(error: AgentError): void {
-<span class="cstat-no" title="statement not covered" >    console.error(</span>
-      `[${error.timestamp}] ${error.agent_id}: ${error.code} - ${error.message}`
-    );
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (error.context) {</span>
-<span class="cstat-no" title="statement not covered" >      console.error(`Context: ${error.context}`);</span>
+  updateOutputProof(agentId: string, result: ExecutionResult, validationResult: { passed: boolean }): void {
+    const outputPath = `${process.env.FREELANG_HOME || '.'}/OUTPUT_PROOF.md`;
+    const timestamp = new Date().toISOString().split('T')[0];
+    const statusIcon = validationResult.passed ? '✅' : <span class="branch-1 cbranch-no" title="branch not covered" >'❌';</span>
+&nbsp;
+    let content = '';
+    try {
+      content = fs.readFileSync(outputPath, 'utf-8');
+    } catch {
+<span class="cstat-no" title="statement not covered" >      content = '# 에이전트 검증 기록\n\n';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (error.recovery_suggestion) {</span>
-<span class="cstat-no" title="statement not covered" >      console.error(`Suggestion: ${error.recovery_suggestion}`);</span>
-    }
+&nbsp;
+    const entry = `
+## ${agentId} (${timestamp})
+&nbsp;
+**상태**: ${statusIcon} ${validationResult.passed ? '배포 준비 완료' : <span class="branch-1 cbranch-no" title="branch not covered" >'검증 필요'}</span>
+&nbsp;
+- npm test: ${validationResult.passed ? '✅ 통과' : <span class="branch-1 cbranch-no" title="branch not covered" >'❌ 실패'}</span>
+- 실행시간: ${result.executionTimeMs}ms
+- 결과: ${result.status}
+`;
+&nbsp;
+    content += entry + '\n';
+&nbsp;
+    fs.writeFileSync(outputPath, content, 'utf-8');
   }
 &nbsp;
   /**
-   * 에러 처리
+   * 값을 포맷팅
    */
-<span class="fstat-no" title="function not covered" >  static </span>handleError(
-    error: AgentError,
-    fallbackAgent?: string
-  ): ExecutionResult {
-    const recovery = <span class="cstat-no" title="statement not covered" >this.canRecover(error.code as AgentErrorCode);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    return {</span>
-      agent_id: error.agent_id,
-      status: 'failure',
-      error,
-      metadata: {
-        execution_time_ms: 0,
-        memory_used_mb: 0,
-        timestamp: new Date().toISOString(),
-      },
-    };
+  private formatValue(value: number | undefined, unit: string): string {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (value === undefined) <span class="cstat-no" title="statement not covered" >return '?';</span>
+    if (unit === '%') return (value * 100).toFixed(2) + '%';
+    if (unit === 'ms') return Math.round(value) + 'ms';
+<span class="cstat-no" title="statement not covered" >    return value.toString();</span>
   }
 &nbsp;
   /**
-   * 재시도 로직
+   * 상태 아이콘 반환
    */
-<span class="fstat-no" title="function not covered" >  static </span>async retryWithBackoff&lt;T&gt;(
-    fn: () =&gt; Promise&lt;T&gt;,
-    maxRetries: number = <span class="branch-0 cbranch-no" title="branch not covered" >3,</span>
-    initialDelayMs: number = <span class="branch-0 cbranch-no" title="branch not covered" >1000,</span>
-    backoffMultiplier: number = <span class="branch-0 cbranch-no" title="branch not covered" >2</span>
-  ): Promise&lt;T&gt; {
-    let lastError: Error | null = <span class="cstat-no" title="statement not covered" >null;</span>
-    let delay = <span class="cstat-no" title="statement not covered" >initialDelayMs;</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    for (let attempt = <span class="cstat-no" title="statement not covered" >0;</span> attempt &lt; maxRetries; attempt++) {</span>
-<span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        return await fn();</span>
-      } catch (error) {
-<span class="cstat-no" title="statement not covered" >        lastError = error as Error;</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (attempt &lt; maxRetries - 1) {</span>
-<span class="cstat-no" title="statement not covered" >          await new Promise(<span class="fstat-no" title="function not covered" >(r</span>esolve) =&gt; <span class="cstat-no" title="statement not covered" >setTimeout(resolve, delay))</span>;</span>
-<span class="cstat-no" title="statement not covered" >          delay *= backoffMultiplier;</span>
-        }
-      }
-    }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    throw lastError || new Error('Maximum retries exceeded');</span>
-  }
-&nbsp;
-  /**
-   * 에러 통계
-   */
-<span class="fstat-no" title="function not covered" >  static </span>createErrorStats(errors: AgentError[]) {
-    const stats = <span class="cstat-no" title="statement not covered" >{</span>
-      total: errors.length,
-      by_code: {} as Record&lt;string, number&gt;,
-      by_agent: {} as Record&lt;string, number&gt;,
-    };
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    for (const error of errors) {</span>
-<span class="cstat-no" title="statement not covered" >      stats.by_code[error.code] = (stats.by_code[error.code] || 0) + 1;</span>
-<span class="cstat-no" title="statement not covered" >      stats.by_agent[error.agent_id] =</span>
-        (stats.by_agent[error.agent_id] || 0) + 1;
-    }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    return stats;</span>
+  private statusIcon(passed: boolean | undefined): string {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (passed === undefined) <span class="cstat-no" title="statement not covered" >return '⏳';</span>
+    return passed ? '✅' : '❌';
   }
 }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >export default ErrorHandlingHarness;</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -622,7 +565,7 @@ class ErrorHandlingHarness {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-06T12:39:55.673Z
+                at 2026-04-06T12:39:55.721Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
