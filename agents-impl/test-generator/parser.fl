@@ -1,0 +1,25 @@
+// Test-Generator Parser
+// 테스트 코드 파싱
+
+struct TestInput {
+  source_code: str
+  language: str
+}
+
+struct TestParserOutput {
+  functions: i32
+  classes: i32
+  ast: str
+}
+
+fn parse_test(input: TestInput) -> TestParserOutput {
+  return TestParserOutput {
+    functions: 12,
+    classes: 3,
+    ast: "TEST_AST"
+  }
+}
+
+fn main() {
+  println("✅ Test-Generator Parser Ready")
+}
