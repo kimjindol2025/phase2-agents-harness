@@ -5,6 +5,7 @@
   "showThinkingSummaries": true,
   "alwaysThinkingEnabled": true,
   "plugins": [
+    "phase2-harness",
     "code-review",
     "commit-commands",
     "security-guidance",
@@ -36,6 +37,12 @@
     ]
   },
   "codeActions": {
+    "phase2-harness": {
+      "enabled": true,
+      "hookifyRules": 6,
+      "commands": 5,
+      "autoValidate": true
+    },
     "code-review": {
       "enabled": true,
       "threshold": 80,

@@ -14,7 +14,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "validate": "npm run test && npm run lint",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "harness:status": "echo 'Harness Status: Use /harness-status command in Claude Code'",
+    "harness:validate": "bash scripts/validate-harness.sh",
+    "bridge": "ts-node src/bridge/freelang-bridge.ts"
   },
   "keywords": [
     "agents",
