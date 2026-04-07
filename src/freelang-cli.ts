@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { executeV9File, validateV9Execution, isValidV9Result } from './v9-bridge';
 
 interface ExecutionResult {
   success: boolean;
@@ -139,7 +140,7 @@ export function executeFreeLangFile(filePath: string): ExecutionResult {
 }
 
 /**
- * 에이전트의 3파일 모두 실행
+ * 에이전트의 3파일 모두 실행 (정적 파싱)
  */
 export function executeAgent(agentId: string, agentRoot: string = '.'): {
   parser: ExecutionResult;
@@ -164,6 +165,52 @@ export function executeAgent(agentId: string, agentRoot: string = '.'): {
 }
 
 /**
+ * 병렬 검증: 정적 파싱 + v9 실행
+ */
+export function executeAgentWithV9(agentId: string, agentRoot: string = '.'): {
+  static: ExecutionResult;
+  dynamic: any;
+  validation: {
+    match: boolean;
+    differences: Array<{
+      key: string;
+      static: any;
+      dynamic: any;
+    }>;
+  };
+  combined: { [key: string]: any };
+} {
+  const agentPath = path.join(agentRoot, 'agents-impl', agentId);
+  const proofPath = path.join(agentPath, 'proof.fl');
+
+  // 1. 정적 파싱 (기존 방식)
+  const staticResult = executeFreeLangFile(proofPath);
+
+  // 2. v9 실행 (신규 방식)
+  const dynamicResult = executeV9File(proofPath);
+
+  // 3. 검증
+  const validation = validateV9Execution(
+    staticResult.variables,
+    dynamicResult.variables
+  );
+
+  // 4. 결합 (동적 결과 우선)
+  const combined = {
+    ...staticResult.variables,
+    ...dynamicResult.variables,
+    v9Valid: isValidV9Result(dynamicResult)
+  };
+
+  return {
+    static: staticResult,
+    dynamic: dynamicResult,
+    validation,
+    combined
+  };
+}
+
+/**
  * CLI 진입점
  */
 async function main() {
@@ -172,16 +219,42 @@ async function main() {
   const agentId = args[1];
 
   if (!command) {
-    console.error('Usage: ts-node src/freelang-cli.ts <run|test> [agent-id]');
+    console.error('Usage: ts-node src/freelang-cli.ts <run|test|validate> [agent-id]');
     process.exit(1);
   }
 
-  if (command === 'run' && !agentId) {
-    console.error('Usage: ts-node src/freelang-cli.ts run <agent-id>');
+  if ((command === 'run' || command === 'validate') && !agentId) {
+    console.error(`Usage: ts-node src/freelang-cli.ts ${command} <agent-id>`);
     process.exit(1);
   }
 
-  if (command === 'run') {
+  if (command === 'validate') {
+    // v9 병렬 검증
+    const result = executeAgentWithV9(agentId);
+
+    console.log(`\n✅ V9 Parallel Validation: ${agentId}`);
+    console.log('================================\n');
+
+    console.log('📊 Static (정적 파싱):');
+    console.log(JSON.stringify(result.static.variables, null, 2));
+
+    console.log('\n📊 Dynamic (v9 실행):');
+    console.log(JSON.stringify(result.dynamic.variables, null, 2));
+
+    console.log('\n📊 Validation (검증):');
+    console.log(`  Match: ${result.validation.match ? '✅' : '❌'}`);
+    if (result.validation.differences.length > 0) {
+      console.log('  Differences:');
+      for (const diff of result.validation.differences) {
+        console.log(`    - ${diff.key}: ${diff.static} vs ${diff.dynamic}`);
+      }
+    }
+
+    console.log('\n📊 Combined Result:');
+    console.log(JSON.stringify(result.combined, null, 2));
+
+    return result;
+  } else if (command === 'run') {
     const result = executeAgent(agentId);
 
     console.log(`\n✅ FreeLang Execution: ${agentId}`);
